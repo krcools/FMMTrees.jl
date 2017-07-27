@@ -15,7 +15,22 @@ function clustertree(points)
     root = start(box_list)
     a = clustertree_impl!(point_list, box_list, root)
     box_list.data[box_list.nodes[root].value] = Box{Int}(1, length(points)+1, a, -1)
-    return collect(point_list), collect(box_list)
+
+    np = length(point_list)
+    perm = zeros(Int, length(point_list))
+    points_out = similar(points)
+
+    i = 1
+    s = start(point_list)
+    while !done(point_list,s)
+        @assert 1 <= s-1 <= np
+        perm[i] = s-1
+        i += 1
+        _, s = next(point_list, s)
+        #iperm[s] = i
+    end
+
+    return collect(point_list), collect(box_list), perm #, iperm
 end
 
 function boundingbox(points)
