@@ -37,7 +37,6 @@ function adaptive_cross_approximation(μ,τ,σ)
 
     while true
         l += 1
-        #@show l
 
         fill!(Rcj,0)
         for k in eachindex(αs)
@@ -46,7 +45,6 @@ function adaptive_cross_approximation(μ,τ,σ)
         Mcj = vec(μ(τ,[j]))
 
         isempty(I) && break
-
 
         Iv = collect(I) # I is a subset of tau
         P = indexin(Iv,τ)
@@ -113,24 +111,15 @@ function assemble_aca(op, tfs, bfs)
     # create closure
     function adm2(b)
         nmin = 20
-        #η = 1.5
-        #η = 2.0
-        #η = 2.5
         I = b[1][1].begin_idx : b[1][1].end_idx-1
         J = b[2][1].begin_idx : b[2][1].end_idx-1
         length(I) < nmin && return true
         length(J) < nmin && return true
-        #ll1, ur1 = boundingbox(p[permp[I]]); c1 = (ll1+ur1)/2;
-        #ll2, ur2 = boundingbox(q[permq[J]]); c2 = (ll2+ur2)/2;
         ll1, ur1 = boundingbox(p[I]); c1 = (ll1+ur1)/2;
         ll2, ur2 = boundingbox(q[J]); c2 = (ll2+ur2)/2;
         diam1 = norm(ur1-c1)
         diam2 = norm(ur2-c2)
         dist12 = norm(c2-c1)
-        # @show diam1
-        # @show diam2
-        # @show dist12
-        # error("basta")
         return dist12 >= η*max(diam1, diam2)
     end
 

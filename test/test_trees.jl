@@ -8,6 +8,3 @@ children = FMMTrees.children
 
 chdit = children(b)
 state = start(children(b))
-
-
-print_tree(b)

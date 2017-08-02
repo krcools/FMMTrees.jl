@@ -25,3 +25,18 @@ move_before!(dl, s100, s3)
 
 sdl = sublist(dl, n, q)
 @test collect(sdl) == [3,2]
+
+l = list([1,2,3,4])
+
+a = [1,2,3,4]
+l = list(a)
+s, i = start(l), 1
+while !done(l,s)
+    @test l[s] == a[i]
+    i += 1
+    _, s = next(l,s)
+end
+
+s = start(l)
+l[s] = 20
+@test a[1] == 20

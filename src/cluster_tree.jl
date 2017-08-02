@@ -46,7 +46,8 @@ end
 function clustertree_impl!(points, boxes, boxit)
 
     length(points) == 1 && return 0
-    box = peek(boxes, boxit)
+    #box = peek(boxes, boxit)
+    box = boxes[boxit]
     @assert length(points)  == box.end_idx - box.begin_idx
 
     ll, ur = boundingbox(points)
@@ -59,10 +60,15 @@ function clustertree_impl!(points, boxes, boxit)
     n2 = length(points) - n1
 
     α, β = box.begin_idx, box.end_idx
+
     @assert n1 != 0; @assert n2 != 0
     @assert β - α == n1 + n2
-    rbox = Box(α+n1, β, 0, 1); insert_after!(boxes, rbox, boxit); _, rboxit = next(boxes, boxit)
-    lbox = Box(α, α+n1, 0, 0); insert_after!(boxes, lbox, boxit); _, lboxit = next(boxes, boxit)
+
+    rbox = Box(α+n1, β, 0, 1)
+    lbox = Box(α, α+n1, 0, 0)
+
+    insert_after!(boxes, rbox, boxit);  _, rboxit = next(boxes, boxit)
+    insert_after!(boxes, lbox, boxit);  _, lboxit = next(boxes, boxit)
 
     # move all points in the left node to the front
     head = node = start(points)
@@ -127,7 +133,12 @@ const BlockTree = Tuple{Tree,Tree}
 children(b::Tuple{Tree,Tree}) = IterTools.product(children(b[1]), children(b[2]))
 
 
-admissable_partition(bt, adm) = (p = Vector{BlockTree}(); admissable_partition!(bt, adm, p); p)
+function admissable_partition(bt, adm)
+    p = Vector{BlockTree}()
+    admissable_partition!(bt, adm, p)
+    p
+end
+
 function admissable_partition!(blocktree, adm, partition)
     adm(blocktree) && (push!(partition, blocktree); return)
     for c in children(blocktree)
