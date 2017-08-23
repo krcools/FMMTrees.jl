@@ -5,7 +5,7 @@ struct LowRankMatrix{T}
     B::Matrix{T}
 end
 
-Base.:*(A::LowRankMatrix, x::Vector) = (A*(B*x))
+Base.:*(M::LowRankMatrix, x::Vector) = (M.A*(M.B*x))
 
 struct LowRankBlock{T}
     matrix::LowRankMatrix{T}
