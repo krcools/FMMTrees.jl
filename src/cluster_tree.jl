@@ -2,13 +2,6 @@ using IterTools
 
 export clustertree, children, depthfirst, admissable_partition, boundingbox
 
-struct Box{T}
-    begin_idx::Int
-    end_idx::Int
-    num_children::Int
-    data::T
-end
-
 function clustertree(points)
     point_list = list(points)
     box_list = list([Box{Int}(1, length(points)+1, 0, -1)])
@@ -16,6 +9,8 @@ function clustertree(points)
     a = clustertree_impl!(point_list, box_list, root)
     box_list.data[box_list.nodes[root].value] = Box{Int}(1, length(points)+1, a, -1)
 
+    # retrieve the permutation linking the original ordering of points
+    # and that dictated by its geometric configuration.
     np = length(point_list)
     perm = zeros(Int, length(point_list))
     points_out = similar(points)
@@ -27,7 +22,6 @@ function clustertree(points)
         perm[i] = s-1
         i += 1
         _, s = next(point_list, s)
-        #iperm[s] = i
     end
 
     return collect(point_list), collect(box_list), perm #, iperm
@@ -43,6 +37,12 @@ function boundingbox(points)
     return ll, ur
 end
 
+"""
+    clustertree_impl!(points, boxes, boxit)
+
+Insert `points` in the tree backed by `boxes` at the leaf node `boxit`. The function
+returns the number of child nodes in the constructed subtree (not counting the root).
+"""
 function clustertree_impl!(points, boxes, boxit)
 
     length(points) == 1 && return 0
@@ -103,45 +103,4 @@ function clustertree_impl!(points, boxes, boxit)
     end
 
     a
-end
-
-struct ChildView{T}
-    tree::T
-end
-
-Base.start(itr::ChildView) = (0, 2) # progess, relative_index
-Base.done(itr::ChildView, state) = (state[1] == itr.tree[1].num_children)
-function Base.next(itr::ChildView, state)
-    child = itr.tree[state[2]]
-    newstate = (state[1] + child.num_children + 1, state[2] + child.num_children + 1)
-    return view(itr.tree, state[2]:endof(itr.tree)) , newstate
-end
-
-
-children(tree) = ChildView(tree)
-
-function depthfirst(f, t, level = 1)
-    print("  "^(level-1))
-    f(t, level)
-    for c in children(t)
-        depthfirst(f, c, level+1)
-    end
-end
-
-const Tree = AbstractVector{T} where T<:Box
-const BlockTree = Tuple{Tree,Tree}
-children(b::Tuple{Tree,Tree}) = IterTools.product(children(b[1]), children(b[2]))
-
-
-function admissable_partition(bt, adm)
-    p = Vector{BlockTree}()
-    admissable_partition!(bt, adm, p)
-    p
-end
-
-function admissable_partition!(blocktree, adm, partition)
-    adm(blocktree) && (push!(partition, blocktree); return)
-    for c in children(blocktree)
-        admissable_partition!(c, adm, partition)
-    end
 end

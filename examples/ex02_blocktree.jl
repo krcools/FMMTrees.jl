@@ -34,8 +34,8 @@ function adm(b)
     J = b[2][1].begin_idx : b[2][1].end_idx-1
     length(I) < 2 && return true
     length(J) < 2 && return true
-    ll1, ur1 = boundingbox(p[I]); c1 = (ll1+ur1)/2;
-    ll2, ur2 = boundingbox(p[J]); c2 = (ll2+ur2)/2;
+    ll1, ur1 = FMMTrees.boundingbox(p[I]); c1 = (ll1+ur1)/2;
+    ll2, ur2 = FMMTrees.boundingbox(p[J]); c2 = (ll2+ur2)/2;
     diam1 = norm(ur1-c1)
     diam2 = norm(ur2-c2)
     dist12 = norm(c2-c1)

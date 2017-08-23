@@ -2,21 +2,23 @@ using BEAST
 using DataStructures
 
 function indmax2(f, itr)
-    I = first(itr)
-    F = f(I)
+    J = first(itr)
+    F = f(J)
     for i in itr
         fi = f(i)
-        fi > F && (I = i; F = fi)
+        fi > F && (J = i; F = fi)
     end
-    return I, F
+    return J, F
 end
 
 # μ is a lazy array. After all, the whole point of doing ACA is to
 # avoid explicit computation of all entries of the matrix under consideration.
-function adaptive_cross_approximation(μ,τ,σ)
+function adaptive_cross_approximation(μ,τ,σ,T=Complex128)
 
-    T = Complex128 # TODO: generalise
     ϵ = sqrt(eps(real(T)))*100
+
+    @assert !isempty(τ)
+    @assert !isempty(σ)
 
     I = OrderedSet(τ)
     J = OrderedSet(σ)
@@ -73,7 +75,7 @@ function adaptive_cross_approximation(μ,τ,σ)
         a = Mcj-Rcj
         b = Mic-Ric
 
-        norm(α)*norm(a)*norm(b) < ϵ && break
+        l > 1 && norm(α)*norm(a)*norm(b) < ϵ && break
 
         push!(αs, α)
         push!(as, a)
@@ -93,7 +95,40 @@ function adaptive_cross_approximation(μ,τ,σ)
         R1cj = Rcj
     end
 
-    return αs, as, bs
+    return αs, as, bs, l
+end
+
+
+function recompress(αs,as,bs,ϵ = sqrt(eps(real(eltype(αs))))*100)
+
+    @assert !isempty(αs)
+    T = eltype(αs)
+
+    r = length(αs)
+    m = length(as[1])
+    n = length(bs[1])
+
+    A = zeros(T,m,r)
+    B = zeros(T,r,n)
+    for i ∈ 1:r
+        A[:,i] = αs[i] * as[i]
+        B[i,:] = bs[i]
+    end
+
+    Q,R = qr(A)
+    U,s,V = svd(R*B)
+    @assert size(s) == (r,)
+    r′ = findfirst(x -> abs(x) < ϵ ,s)
+    r′ == 0 && (r′ = r)
+
+    A = (Q*U)
+    B = diagm(s)*V'
+
+    as = [A[:,i] for i in 1:r′]
+    bs = [B[i,:] for i in 1:r′]
+    αs = ones(T,r′)
+
+    return αs, as, bs, r′
 end
 
 # dop: discrete operator (operator, testfunctions, trialfunctions) triple
@@ -106,11 +141,11 @@ function assemble_aca(op, tfs, bfs)
     q, tq, permq = clustertree(q)
 
     η = 2.0
-    @show η
+    nmin = 20
+    @show η nmin
 
     # create closure
     function adm2(b)
-        nmin = 20
         I = b[1][1].begin_idx : b[1][1].end_idx-1
         J = b[2][1].begin_idx : b[2][1].end_idx-1
         length(I) < nmin && return true
@@ -128,32 +163,30 @@ function assemble_aca(op, tfs, bfs)
     μ = (τ,σ) -> assemble(op, subset(tfs,τ), subset(bfs,σ))
 
     T = scalartype(op)
-    A = Vector{LowRankBlock{T}}()
-    for p in P
+    #A = Vector{LowRankBlock{T}}()
+    blocks = Vector{LowRankBlock{T}}()
+    rmax = 0
+    for (i,p) in enumerate(P)
         τ = p[1][1].begin_idx : p[1][1].end_idx-1
         σ = p[2][1].begin_idx : p[2][1].end_idx-1
-        α, a, b = adaptive_cross_approximation(μ, permp[τ], permq[σ])
-        push!(A, LowRankBlock(α,a,b,permp[τ],permq[σ]))
+        α, a, b, r1 = adaptive_cross_approximation(μ, permp[τ], permq[σ], T)
+        α, a, b, r2 = recompress(α,a,b)
+        r = r2
+        (mod(i,50) == 0) && println("recompression: $r1 → $r2")
+        rmax = max(r, rmax)
+        A = zeros(T,length(τ),r)
+        B = zeros(T,r,length(σ))
+        for j in 1:r A[:,j] = α[j]*a[j] end
+        for j in 1:r B[j,:] = b[j]      end
+        matrix = LowRankMatrix(A,B)
+        block = LowRankBlock(matrix,permp[τ],permq[σ])
+        push!(blocks, block)
     end
 
-    return A
-end
+    println("Maximum rank: ", rmax)
 
-struct LowRankBlock{T} #<: AbstractMatrix{T}
-    α::Vector{T}
-    a::Vector{Vector{T}}
-    b::Vector{Vector{T}}
-    row_idcs
-    col_idcs
+    #return A
+    I = collect(1:numfunctions(tfs))
+    J = collect(1:numfunctions(bfs))
+    return HMatrix(blocks,I,J)
 end
-
-function reconstruct(aca::Vector{M}, m, n) where M <: LowRankBlock
-    T = eltype(aca[1].α)
-    A = zeros(T,m,n)
-    for b in aca
-        R = sum(c*a*b.' for (c,a,b) in zip(b.α,b.a,b.b))
-        A[b.row_idcs, b.col_idcs] .+= R
-    end
-    A
-end
-export reconstruct
