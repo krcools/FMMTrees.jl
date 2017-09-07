@@ -99,6 +99,37 @@ function adaptive_cross_approximation(μ,τ,σ,T=Complex128)
 end
 
 
+function aca2(μ,τ,σ,T=Complex128)
+    cs, as, bs, l = adaptive_cross_approximation(μ,τ,σ,T)
+    r = length(cs)
+    m,n = length(τ), length(σ)
+    A, B = zeros(T,m,r), zeros(T,r,n)
+    for i in 1:r; A[:,i] .= cs[i]*as[i]; end
+    for i in 1:r; B[i,:] .= bs[i]; end
+    lrm = LowRankMatrix(A,B)
+    lrm = recompress2(lrm)
+    return LowRankBlock(lrm,τ,σ)
+end
+
+
+function recompress2(lrm, ϵ = sqrt(eps(real(eltype(lrm.A))))*100)
+
+    A, B = lrm.A, lrm.B
+    r = size(A,2)
+
+    Q,R = qr(A)
+    U,s,V = svd(R*B)
+    r′ = findfirst(x -> abs(x) < ϵ ,s)
+    r′ == 0 && (r′ = r)
+
+    A = (Q*U)[:,1:r′]
+    B = (diagm(s)*V')[1:r′,:]
+
+    println("Compression: $r → $r′")
+
+    return LowRankMatrix(A,B)
+end
+
 function recompress(αs,as,bs,ϵ = sqrt(eps(real(eltype(αs))))*100)
 
     @assert !isempty(αs)
@@ -140,12 +171,12 @@ function assemble_aca(op, tfs, bfs)
     p, tp, permp = clustertree(p)
     q, tq, permq = clustertree(q)
 
-    η = 2.0
+    η = 1.5
     nmin = 20
     @show η nmin
 
     # create closure
-    function adm2(b)
+    function adm(b)
         I = b[1][1].begin_idx : b[1][1].end_idx-1
         J = b[2][1].begin_idx : b[2][1].end_idx-1
         length(I) < nmin && return true
@@ -154,11 +185,11 @@ function assemble_aca(op, tfs, bfs)
         ll2, ur2 = boundingbox(q[J]); c2 = (ll2+ur2)/2;
         diam1 = norm(ur1-c1)
         diam2 = norm(ur2-c2)
-        dist12 = norm(c2-c1)
+        dist12 = norm(c2-c1) # - (diam1 + diam2)/2
         return dist12 >= η*max(diam1, diam2)
     end
 
-    P = admissable_partition((tp,tq), adm2)
+    P = admissable_partition((tp,tq), adm)
     @show length(P)
     μ = (τ,σ) -> assemble(op, subset(tfs,τ), subset(bfs,σ))
 
@@ -169,6 +200,7 @@ function assemble_aca(op, tfs, bfs)
     for (i,p) in enumerate(P)
         τ = p[1][1].begin_idx : p[1][1].end_idx-1
         σ = p[2][1].begin_idx : p[2][1].end_idx-1
+        small = min(length(τ), length(σ)) <= nmin
         α, a, b, r1 = adaptive_cross_approximation(μ, permp[τ], permq[σ], T)
         α, a, b, r2 = recompress(α,a,b)
         r = r2
@@ -176,8 +208,8 @@ function assemble_aca(op, tfs, bfs)
         rmax = max(r, rmax)
         A = zeros(T,length(τ),r)
         B = zeros(T,r,length(σ))
-        for j in 1:r A[:,j] = α[j]*a[j] end
-        for j in 1:r B[j,:] = b[j]      end
+        for j in 1:length(α) A[:,j] = α[j]*a[j] end
+        for j in 1:length(α) B[j,:] = b[j]      end
         matrix = LowRankMatrix(A,B)
         block = LowRankBlock(matrix,permp[τ],permq[σ])
         push!(blocks, block)

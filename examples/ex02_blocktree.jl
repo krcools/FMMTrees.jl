@@ -28,18 +28,19 @@ end
 
 # Visual representation of the block partition at level 3
 #heatmap(S)
-
+nmin = 20
+η = 1.5
 function adm(b)
     I = b[1][1].begin_idx : b[1][1].end_idx-1
     J = b[2][1].begin_idx : b[2][1].end_idx-1
-    length(I) < 2 && return true
-    length(J) < 2 && return true
+    length(I) < nmin && return true
+    length(J) < nmin && return true
     ll1, ur1 = FMMTrees.boundingbox(p[I]); c1 = (ll1+ur1)/2;
     ll2, ur2 = FMMTrees.boundingbox(p[J]); c2 = (ll2+ur2)/2;
     diam1 = norm(ur1-c1)
     diam2 = norm(ur2-c2)
     dist12 = norm(c2-c1)
-    return dist12 >= 3*max(diam1, diam2)
+    return dist12 >= η*max(diam1, diam2)
 end
 
 P = admissable_partition((tp,tp), adm)

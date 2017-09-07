@@ -31,18 +31,22 @@ function Base.:*(A::HMatrix, x)
 end
 
 
+
+storedentries(lrm::LowRankMatrix) = length(lrm.A) + length(lrm.B)
+storedentries(lrb::LowRankBlock) = storedentries(lrb.matrix)
+
 function storedentries(A::HMatrix)
     sz = 0
     for block in A.blocks
-        sz += length(block.matrix.A) + length(block.matrix.B)
+        sz += storedentries(block)
     end
     return sz
 end
 
-
 function reconstruct(A::HMatrix)
     M = zeros(eltype(A), size(A)...)
     for block in A.blocks
+        @assert norm(M[block.τ,block.σ]) == 0
         M[block.τ,block.σ] = block.matrix.A * block.matrix.B
     end
     return M
