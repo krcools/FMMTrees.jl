@@ -23,7 +23,8 @@ Base.eltype(A::HMatrix{T}) where {T} = T
 Base.size(A::HMatrix) = (length(A.I), length(A.J))
 
 function Base.:*(A::HMatrix, x)
-    y = zeros(length(A.I))
+    T = promote_type(eltype(A), eltype(x))
+    y = zeros(T, length(A.I))
     for block in A.blocks
         y[block.τ] .+= block.matrix * x[block.σ]
     end

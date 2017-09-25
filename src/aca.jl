@@ -15,7 +15,7 @@ end
 # avoid explicit computation of all entries of the matrix under consideration.
 function adaptive_cross_approximation(μ,τ,σ,T=Complex128)
 
-    ϵ = sqrt(eps(real(T)))*100
+    ϵ = sqrt(eps(real(T)))*1000
 
     @assert !isempty(τ)
     @assert !isempty(σ)
@@ -112,7 +112,7 @@ function aca2(μ,τ,σ,T=Complex128)
 end
 
 
-function recompress2(lrm, ϵ = sqrt(eps(real(eltype(lrm.A))))*100)
+function recompress2(lrm, ϵ = sqrt(eps(real(eltype(lrm.A))))*1000)
 
     A, B = lrm.A, lrm.B
     r = size(A,2)

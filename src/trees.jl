@@ -77,7 +77,7 @@ function h1compress(op, tfs, bfs)
     μ = (τ,σ) -> assemble(op, subset(tfs,τ), subset(bfs,σ))
 
     η = 1.5
-    nmin = 20
+    nmin = 100
     function adm4(b)
         I = b[1][1].begin_idx : b[1][1].end_idx-1
         J = b[2][1].begin_idx : b[2][1].end_idx-1
@@ -87,10 +87,10 @@ function h1compress(op, tfs, bfs)
         ll2, ur2 = boundingbox(q2[J]);
         c1 = (ll1+ur1)/2;
         c2 = (ll2+ur2)/2;
-        diam1 = norm(ur1-c1)
-        diam2 = norm(ur2-c2)
-        dist12 = norm(c2-c1)
-        return dist12 >= η*max(diam1, diam2)
+        diam1 = 2norm(ur1-c1)
+        diam2 = 2norm(ur2-c2)
+        dist12 = norm(c2-c1) - 0.5(diam1 + diam2)
+        return dist12 >= η*min(diam1, diam2)
     end
 
     block_tree = (tp, tq)
