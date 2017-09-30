@@ -27,7 +27,7 @@ depthfirst((tp,tp)) do b,l
 end
 
 # Visual representation of the block partition at level 3
-#heatmap(S)
+# heatmap(S)
 nmin = 20
 η = 1.5
 function adm(b)
@@ -53,8 +53,8 @@ end
 
 extrema(S)
 
-using Plots; plotlyjs();
-heatmap(S)
+# using Plots; plotlyjs();
+# heatmap(S)
 
 find(P) do b
     I = b[1][1].begin_idx : b[1][1].end_idx-1

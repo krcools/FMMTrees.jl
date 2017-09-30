@@ -2,12 +2,24 @@ using IterTools
 
 export clustertree, children, depthfirst, admissable_partition, boundingbox
 
+struct Box
+    begin_idx::Int
+    end_idx::Int
+    sector::Int
+end
+
 function clustertree(points)
     point_list = list(points)
-    box_list = list([Box{Int}(1, length(points)+1, 0, -1)])
+
+    root_sector = -1 # The root has no well-defined sector
+    root_box = Box(1, length(points)+1, root_sector)
+    root_node = TreeNode(0, root_box)
+    box_list = list([root_node])
+
     root = start(box_list)
     a = clustertree_impl!(point_list, box_list, root)
-    box_list.data[box_list.nodes[root].value] = Box{Int}(1, length(points)+1, a, -1)
+    #box_list.data[box_list.nodes[root].value] = TreeNode{Int}(1, length(points)+1, a, -1)
+    box_list.data[box_list.nodes[root].value] = TreeNode(a, Box(1, length(points)+1, -1))
 
     # retrieve the permutation linking the original ordering of points
     # and that dictated by its geometric configuration.
@@ -46,9 +58,8 @@ returns the number of child nodes in the constructed subtree (not counting the r
 function clustertree_impl!(points, boxes, boxit)
 
     length(points) == 1 && return 0
-    #box = peek(boxes, boxit)
     box = boxes[boxit]
-    @assert length(points)  == box.end_idx - box.begin_idx
+    @assert length(points)  == box.data.end_idx - box.data.begin_idx
 
     ll, ur = boundingbox(points)
     diag = ur - ll
@@ -59,13 +70,13 @@ function clustertree_impl!(points, boxes, boxit)
     n1 = count(p -> (p[i] < cntr[i]), points)
     n2 = length(points) - n1
 
-    α, β = box.begin_idx, box.end_idx
+    α, β = box.data.begin_idx, box.data.end_idx
 
     @assert n1 != 0; @assert n2 != 0
     @assert β - α == n1 + n2
 
-    rbox = Box(α+n1, β, 0, 1)
-    lbox = Box(α, α+n1, 0, 0)
+    rbox = TreeNode(0, Box(α+n1, β, 1))
+    lbox = TreeNode(0, Box(α, α+n1, 0))
 
     insert_after!(boxes, rbox, boxit);  _, rboxit = next(boxes, boxit)
     insert_after!(boxes, lbox, boxit);  _, lboxit = next(boxes, boxit)
@@ -88,17 +99,17 @@ function clustertree_impl!(points, boxes, boxit)
         a = 2
     elseif n2 == 1
         a1 = clustertree_impl!(sublist(points, start(points), split), boxes, lboxit)
-        boxes.data[boxes.nodes[lboxit].value] =  Box(α, α+n1, a1, 0)
+        boxes.data[boxes.nodes[lboxit].value] =  TreeNode(a1, Box(α, α+n1, 0))
         a = a1 + 2
     elseif n1 == 1
         a2 = clustertree_impl!(sublist(points, split, done(points)), boxes, rboxit)
-        boxes.data[boxes.nodes[rboxit].value] =  Box(α+n1, β, a2, 1)
+        boxes.data[boxes.nodes[rboxit].value] =  TreeNode(a2, Box(α+n1, β, 1))
         a = 2 + a2
     else
         a1 = clustertree_impl!(sublist(points, start(points), split), boxes, lboxit)
-        boxes.data[boxes.nodes[lboxit].value] =  Box(α, α+n1, a1, 0)
+        boxes.data[boxes.nodes[lboxit].value] =  TreeNode(a1, Box(α, α+n1, 0))
         a2 = clustertree_impl!(sublist(points, split, done(points)),  boxes, rboxit)
-        boxes.data[boxes.nodes[rboxit].value] =  Box(α+n1, β, a2, 1)
+        boxes.data[boxes.nodes[rboxit].value] =  TreeNode(a2, Box(α+n1, β, 1))
         a = 2 + a1 + a2
     end
 

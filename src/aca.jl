@@ -163,62 +163,62 @@ function recompress(αs,as,bs,ϵ = sqrt(eps(real(eltype(αs))))*100)
 end
 
 # dop: discrete operator (operator, testfunctions, trialfunctions) triple
-function assemble_aca(op, tfs, bfs)
-
-    p = positions(tfs)
-    q = positions(bfs)
-
-    p, tp, permp = clustertree(p)
-    q, tq, permq = clustertree(q)
-
-    η = 1.5
-    nmin = 20
-    @show η nmin
-
-    # create closure
-    function adm(b)
-        I = b[1][1].begin_idx : b[1][1].end_idx-1
-        J = b[2][1].begin_idx : b[2][1].end_idx-1
-        length(I) < nmin && return true
-        length(J) < nmin && return true
-        ll1, ur1 = boundingbox(p[I]); c1 = (ll1+ur1)/2;
-        ll2, ur2 = boundingbox(q[J]); c2 = (ll2+ur2)/2;
-        diam1 = norm(ur1-c1)
-        diam2 = norm(ur2-c2)
-        dist12 = norm(c2-c1) # - (diam1 + diam2)/2
-        return dist12 >= η*max(diam1, diam2)
-    end
-
-    P = admissable_partition((tp,tq), adm)
-    @show length(P)
-    μ = (τ,σ) -> assemble(op, subset(tfs,τ), subset(bfs,σ))
-
-    T = scalartype(op)
-    #A = Vector{LowRankBlock{T}}()
-    blocks = Vector{LowRankBlock{T}}()
-    rmax = 0
-    for (i,p) in enumerate(P)
-        τ = p[1][1].begin_idx : p[1][1].end_idx-1
-        σ = p[2][1].begin_idx : p[2][1].end_idx-1
-        small = min(length(τ), length(σ)) <= nmin
-        α, a, b, r1 = adaptive_cross_approximation(μ, permp[τ], permq[σ], T)
-        α, a, b, r2 = recompress(α,a,b)
-        r = r2
-        (mod(i,50) == 0) && println("recompression: $r1 → $r2")
-        rmax = max(r, rmax)
-        A = zeros(T,length(τ),r)
-        B = zeros(T,r,length(σ))
-        for j in 1:length(α) A[:,j] = α[j]*a[j] end
-        for j in 1:length(α) B[j,:] = b[j]      end
-        matrix = LowRankMatrix(A,B)
-        block = LowRankBlock(matrix,permp[τ],permq[σ])
-        push!(blocks, block)
-    end
-
-    println("Maximum rank: ", rmax)
-
-    #return A
-    I = collect(1:numfunctions(tfs))
-    J = collect(1:numfunctions(bfs))
-    return HMatrix(blocks,I,J)
-end
+# function assemble_aca(op, tfs, bfs)
+#
+#     p = positions(tfs)
+#     q = positions(bfs)
+#
+#     p, tp, permp = clustertree(p)
+#     q, tq, permq = clustertree(q)
+#
+#     η = 1.5
+#     nmin = 20
+#     @show η nmin
+#
+#     # create closure
+#     function adm(b)
+#         I = b[1][1].begin_idx : b[1][1].end_idx-1
+#         J = b[2][1].begin_idx : b[2][1].end_idx-1
+#         length(I) < nmin && return true
+#         length(J) < nmin && return true
+#         ll1, ur1 = boundingbox(p[I]); c1 = (ll1+ur1)/2;
+#         ll2, ur2 = boundingbox(q[J]); c2 = (ll2+ur2)/2;
+#         diam1 = norm(ur1-c1)
+#         diam2 = norm(ur2-c2)
+#         dist12 = norm(c2-c1) # - (diam1 + diam2)/2
+#         return dist12 >= η*max(diam1, diam2)
+#     end
+#
+#     P = admissable_partition((tp,tq), adm)
+#     @show length(P)
+#     μ = (τ,σ) -> assemble(op, subset(tfs,τ), subset(bfs,σ))
+#
+#     T = scalartype(op)
+#     #A = Vector{LowRankBlock{T}}()
+#     blocks = Vector{LowRankBlock{T}}()
+#     rmax = 0
+#     for (i,p) in enumerate(P)
+#         τ = p[1][1].begin_idx : p[1][1].end_idx-1
+#         σ = p[2][1].begin_idx : p[2][1].end_idx-1
+#         small = min(length(τ), length(σ)) <= nmin
+#         α, a, b, r1 = adaptive_cross_approximation(μ, permp[τ], permq[σ], T)
+#         α, a, b, r2 = recompress(α,a,b)
+#         r = r2
+#         (mod(i,50) == 0) && println("recompression: $r1 → $r2")
+#         rmax = max(r, rmax)
+#         A = zeros(T,length(τ),r)
+#         B = zeros(T,r,length(σ))
+#         for j in 1:length(α) A[:,j] = α[j]*a[j] end
+#         for j in 1:length(α) B[j,:] = b[j]      end
+#         matrix = LowRankMatrix(A,B)
+#         block = LowRankBlock(matrix,permp[τ],permq[σ])
+#         push!(blocks, block)
+#     end
+#
+#     println("Maximum rank: ", rmax)
+#
+#     #return A
+#     I = collect(1:numfunctions(tfs))
+#     J = collect(1:numfunctions(bfs))
+#     return HMatrix(blocks,I,J)
+# end

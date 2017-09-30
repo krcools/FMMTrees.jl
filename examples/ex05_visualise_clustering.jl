@@ -75,8 +75,8 @@ end
 @show extrema(balance)
 
 using MATLAB
-@matlab figure()
-@matlab hold("on")
+mat"figure()"
+mat"hold("on")"
 V = [v[i] for v in Γ1.vertices, i in 1:3]
 F = [f[i] for f in Γ1.faces, i in 1:3]
 @mput V F
@@ -85,25 +85,8 @@ for (r,q) in enumerate(Q)
     I = q[1].begin_idx : q[1].end_idx-1
     I = permp[I]
     @mput I r
-    @matlab patch("Vertices",V,"Faces",F[I,:],"FaceColor",rand(3,1))
+    mat"patch("Vertices",V,"Faces",F[I,:],"FaceColor",rand(3,1))"
 end
-
-
-# Fix level plot of the observer tree
-# @matlab figure()
-# @matlab hold("on")
-# V = [v[i] for v in Γ1.vertices, i in 1:3]
-# F = [f[i] for f in Γ1.faces, i in 1:3]
-# @mput V F
-# target_level = 5
-# depthfirst(tp) do t,l
-#     I = t[1].begin_idx : t[1].end_idx-1
-#     I = permp[I]
-#     @mput I
-#     if l == target_level
-#         @matlab patch("Vertices",V,"Faces",F[I,:],"FaceColor",rand(3,1))
-#     end
-# end
 
 
 ## Another sanity check: everything can be reached from the root

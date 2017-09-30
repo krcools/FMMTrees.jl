@@ -13,6 +13,7 @@ q = positions(bfs)
 p, tp, permp = clustertree(p)
 q, tq, permq = clustertree(q)
 
+# Collect all boxes at depth 5
 B = Array{typeof(tp)}(0)
 depthfirst(tp) do t, level
   level == 5 && push!(B,t)
@@ -20,13 +21,15 @@ end
 
 using MATLAB
 
+# Plot points in the boxes at depth 5 in different colours
 @matlab figure()
 @matlab hold("on")
 for b in B
   ps = p[b[1].begin_idx : b[1].end_idx-1]
   ps = [p[i] for p in ps, i in 1:3]
   @mput ps
-  @matlab plot3(ps[:,1],ps[:,2],ps[:,3],'.')
+  #@matlab plot3(ps[:,1],ps[:,2],ps[:,3],'.')
+  mat"plot3(ps(:,1),ps(:,2),ps(:,3),'.')"
 end
 
 
@@ -46,6 +49,7 @@ function adm(b)
     return dist12 >= η*max(diam1, diam2)
 end
 
+# Plot the pair of clusters making up block n
 tb = FMMTrees.admissable_partition((tp,tq),adm)
 n = 1
 τ, σ = tb[n][1][1], tb[n][2][1]
@@ -54,12 +58,19 @@ n = 1
 ps = [p[i] for p in p[τ.begin_idx:τ.end_idx-1], i in 1:3]
 qs = [q[i] for q in q[σ.begin_idx:σ.end_idx-1], i in 1:3]
 @mput ps qs
-@matlab begin
-  plot3(ps[:,1],ps[:,2],ps[:,3],'.')
-  plot3(qs[:,1],qs[:,2],qs[:,3],'.')
-  axis("equal","square")
-end
+mat"""
+plot3(ps(:,1),ps(:,2),ps(:,3),'.')
+plot3(qs(:,1),qs(:,2),qs(:,3),'.')
+axis('equal','square')
+"""
+# @matlab begin
+#   plot3(ps[:,1],ps[:,2],ps[:,3],'.')
+#   plot3(qs[:,1],qs[:,2],qs[:,3],'.')
+#   axis("equal","square")
+# end
 
+# Visualise the blocktree by filling in the matrix with random entries,
+# one per block.
 A = zeros(numfunctions(tfs), numfunctions(bfs))
 for b in tb
     τ, σ = b[1][1], b[2][1]
@@ -69,5 +80,5 @@ for b in tb
 end
 
 using Plots
-pyplot()
+plotlyjs()
 heatmap(A)
