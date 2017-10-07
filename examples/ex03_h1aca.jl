@@ -12,13 +12,23 @@ X2 = raviartthomas(Γ2)
 @show numfunctions(X2)
 
 κ = 1.0; γ = κ*im;
-T = Maxwell3D.singlelayer(gamma=γ)
+t = Maxwell3D.singlelayer(gamma=γ)
 
-μ = (τ,σ) -> assemble(T, subset(X1,τ), subset(X2,σ))
-A = FMMTrees.h1compress(T,X1,X2)
+# assembler = blockassembler(t,X1,X2)
+# T = scalartype(t,X1,X2)
+#
+# function μ2(τ,σ)
+#     Z = zeros(T,length(τ),length(σ))
+#     assembler(τ,σ,(v,m,n)->(Z[m,n] += v))
+# end
+
+# μ = (τ,σ) -> assemble(t, subset(X1,τ), subset(X2,σ))
+A = FMMTrees.h1compress(t,X1,X2)
 
 sz = storedentries(A)
-println("Compression: ", sz/numfunctions(X1)/numfunctions(X2))
+println("Compression: ",  sz/numfunctions(X1)/numfunctions(X2))
 
-# Z1 = assemble(T,X1,X2)
+# Z1 = assemble(t,X1,X2)
 # Z2 = FMMTrees.reconstruct(A)
+#
+# norm(Z1-Z2)

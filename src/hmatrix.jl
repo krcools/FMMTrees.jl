@@ -63,14 +63,14 @@ function admissability_condition(strength, nmin, test_points, trial_points)
 
     function adm(b)
 
-        I = b[1][1].data.begin_idx : b[1][1].data.end_idx-1
-        J = b[2][1].data.begin_idx : b[2][1].data.end_idx-1
+        τ = range(data(testcluster(b)))
+        σ = range(data(trialcluster(b)))
 
-        length(I) < nmin && return true
-        length(J) < nmin && return true
+        length(τ) < nmin && return true
+        length(σ) < nmin && return true
 
-        ll1, ur1 = boundingbox(p2[I]);
-        ll2, ur2 = boundingbox(q2[J]);
+        ll1, ur1 = boundingbox(p2[τ]);
+        ll2, ur2 = boundingbox(q2[σ]);
 
         c1 = (ll1+ur1)/2;
         c2 = (ll2+ur2)/2;
@@ -86,6 +86,8 @@ end
 
 function h1compress(op, tfs, bfs)
 
+    T = scalartype(op, tfs, bfs)
+
     p = positions(tfs)
     q = positions(bfs)
 
@@ -93,13 +95,20 @@ function h1compress(op, tfs, bfs)
     q2, tq, permq = clustertree(q)
     μ = (τ,σ) -> assemble(op, subset(tfs,τ), subset(bfs,σ))
 
+    assembler = blockassembler(op, tfs, bfs)
+    function μ2(τ,σ)
+        Z = zeros(T,length(τ),length(σ))
+        assembler(τ,σ,(v,m,n)->(Z[m,n] += v))
+        return Z
+    end
+
     η, nmin = 1.5, 100
     adm4 = admissability_condition(η, nmin, p2, q2)
 
     block_tree = (tp, tq)
     T = scalartype(op, tfs, bfs)
     hmatrix = Vector{LowRankBlock{T}}()
-    h1compress!(block_tree, adm4, hmatrix, μ, permp, permq)
+    h1compress!(block_tree, adm4, hmatrix, μ2, permp, permq)
 
     M = numfunctions(tfs)
     N = numfunctions(bfs)
@@ -113,11 +122,14 @@ end
 
 function h1compress!(block, adm3, hmatrix, μ, permp, permq)
 
-    τ = permp[block[1][1].data.begin_idx : block[1][1].data.end_idx-1]
-    σ = permq[block[2][1].data.begin_idx : block[2][1].data.end_idx-1]
+    τ = permp[range(data(testcluster(block)))]
+    σ = permq[range(data(trialcluster(block)))]
 
     if adm3(block)
         lrb = aca2(μ,τ,σ)
+        rank1 = min(length(τ), length(σ))
+        rank2 = size(lrb.matrix.A,2)
+        #println("Compression: $rank1 ⇢ $rank2")
         push!(hmatrix, lrb);
         return true
     end
@@ -137,20 +149,20 @@ function h1compress!(block, adm3, hmatrix, μ, permp, permq)
     # WARNING: Recompression disabled
     return false
 
-    @assert nc == 4
-    if all_leafs
-        lrb = aca2(μ,τ,σ)
-        sz2 = storedentries(lrb)
-        if sz2 <= sz1
-            for i in 1:nc; pop!(hmatrix); end
-            push!(hmatrix, lrb)
-            return true
-            println("recompression: $sz1 → $sz2")
-        else
-            println("recompression failed")
-            return false
-        end
-    end
-
-    return false
+    # @assert nc == 4
+    # if all_leafs
+    #     lrb = aca2(μ,τ,σ)
+    #     sz2 = storedentries(lrb)
+    #     if sz2 <= sz1
+    #         for i in 1:nc; pop!(hmatrix); end
+    #         push!(hmatrix, lrb)
+    #         return true
+    #         println("recompression: $sz1 → $sz2")
+    #     else
+    #         println("recompression failed")
+    #         return false
+    #     end
+    # end
+    #
+    # return false
 end

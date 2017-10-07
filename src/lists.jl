@@ -1,4 +1,4 @@
-export list, insert_after!, move_before!, prev, peek, sublist
+export list, insert_after!, move_before!, prev, sublist
 
 struct Node
     value::Int  # index into value of the accompanying value
@@ -19,6 +19,9 @@ Base.start(list::List) = list.nodes[1].next
 Base.next(list::List, state) = (list.data[list.nodes[state].value], list.nodes[state].next)
 Base.done(list::List, state) = (list.nodes[state].value == 0)
 
+# Base.getindex(list::List, state) = list.data[list.nodes[state].value]
+# Base.setindex!(list::List, value, state) = (list.data[list.nodes[state].value] = value)
+
 """
     done(iterable) -> state
 
@@ -30,6 +33,8 @@ Base.length(list::List) = length(list.data)
 
 Base.setindex!(list::List, v, state) = (list.data[list.nodes[state].value] = v)
 Base.getindex(list::List, state) = list.data[list.nodes[state].value]
+
+advance(list::List, state) = next(list, state)[2]
 
 # sublist iteration
 struct SubList{L<:List}
@@ -43,9 +48,13 @@ sublist(ls::SubList, b, e) = sublist(ls.parent, b, e)
 
 Base.start(sl::SubList) = next(sl.parent, sl.head)[2]
 Base.next(sl::SubList, s::Int) = next(sl.parent, s)
+advance(list::SubList, state) = next(list, state)[2]
 Base.done(sl::SubList, s::Int) = (s == sl.done)
 Base.done(sl::SubList) = sl.done
 Base.length(sl::SubList) = (n = 0; for x in sl; n += 1; end; n)
+
+Base.getindex(list::SubList, state) = getindex(list.parent, state)
+
 
 """
     prev(list, state) -> item, prevstate

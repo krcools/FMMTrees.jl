@@ -32,7 +32,11 @@ function depthfirst(f, t, level = 1)
 end
 
 const Tree = AbstractVector{T} where T<:TreeNode
+data(tree::Tree) = tree[1].data
+
 const BlockTree = Tuple{Tree,Tree}
+testcluster(blocktree::BlockTree) = blocktree[1]
+trialcluster(blocktree::BlockTree) = blocktree[2]
 children(b::Tuple{Tree,Tree}) = IterTools.product(children(b[1]), children(b[2]))
 
 
