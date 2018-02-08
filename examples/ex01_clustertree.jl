@@ -15,10 +15,10 @@ level = 1
 clrs = [:blue, :red, :green, :black, :cyan, :yellow]
 state = [(0,tree[1].num_children)]
 for (i,b) in enumerate(tree)
-    ll, ur = FMMTrees.boundingbox(q[b.begin_idx:b.end_idx-1])
+    ll, ur = FMMTrees.boundingbox(q[b.data.begin_idx:b.data.end_idx-1])
     x, y = rectangle(ll, ur)
     level == 5 && plot!(x,y,color=clrs[level])
-    level == 4 && println(level, ": ", b.begin_idx:b.end_idx-1)
+    level == 4 && println(level, ": ", b.data.begin_idx:b.data.end_idx-1)
     state[end] = (state[end][1] + b.num_children + 1, state[end][2])
     if b.num_children != 0
          level += 1

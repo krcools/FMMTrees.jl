@@ -57,7 +57,7 @@ end
 function print_tree(tree)
     depthfirst(tree) do node,level
         print("-"^(level-1))
-        print(node[1].begin_idx,",",node[1].end_idx)
+        print(node[1].data.begin_idx,",",node[1].data.end_idx)
         println()
     end
 end
