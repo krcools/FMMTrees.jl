@@ -15,10 +15,9 @@ struct VectorBackedList{T,S<:AbstractVector{T}}
 end
 
 Base.eltype(::Type{VectorBackedList{T,S}}) where {S,T} = T
-Base.start(list::VectorBackedList) = list.nodes[1].next
+Base.start(list::VectorBackedList) = list.nodes[list.head].next
 Base.next(list::VectorBackedList, state) = (list.data[list.nodes[state].value], list.nodes[state].next)
-Base.done(list::VectorBackedList, state) = (list.nodes[state].value == 0)
-
+Base.done(list::VectorBackedList, state) = state == list.tail
 
 """
     done(iterable) -> state
@@ -27,12 +26,11 @@ Produces an iterator state for which `done(iterable,state) == true`. Cf. to the
 c++ end() api.
 """
 Base.done(list::VectorBackedList) = list.tail
-Base.length(list::VectorBackedList) = length(list.data)
-
 Base.setindex!(list::VectorBackedList, v, state) = (list.data[list.nodes[state].value] = v)
 Base.getindex(list::VectorBackedList, state) = list.data[list.nodes[state].value]
 
 advance(list::VectorBackedList, state) = next(list, state)[2]
+Base.length(sl::VectorBackedList) = (n = 0; for x in sl; n += 1; end; n)
 
 # sublist iteration
 struct SubList{L<:VectorBackedList}
@@ -41,18 +39,7 @@ struct SubList{L<:VectorBackedList}
     done::Int
 end
 
-sublist(itr, b, e) = SubList(itr, itr.nodes[itr.nodes[b].prev].idx, e)
-sublist(ls::SubList, b, e) = sublist(ls.parent, b, e)
-
-Base.start(sl::SubList) = next(sl.parent, sl.head)[2]
-Base.next(sl::SubList, s::Int) = next(sl.parent, s)
-advance(list::SubList, state) = next(list, state)[2]
-Base.done(sl::SubList, s::Int) = (s == sl.done)
-Base.done(sl::SubList) = sl.done
-Base.length(sl::SubList) = (n = 0; for x in sl; n += 1; end; n)
-
-Base.getindex(list::SubList, state) = getindex(list.parent, state)
-
+sublist(ls, b, e) = VectorBackedList{eltype(ls),typeof(ls.data)}(ls.data, ls.nodes, ls.nodes[ls.nodes[b].prev].idx, e)
 
 """
     prev(list, state) -> item, prevstate
