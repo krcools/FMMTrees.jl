@@ -1,26 +1,24 @@
 export list, insert_after!, move_before!, prev, sublist
 
-struct Node
-    value::Int  # index into value of the accompanying value
+struct Node{T}
+    value::T    # index into value of the accompanying value
     next::Int   # index into nodes of the next node
     prev::Int   # index into nodes of the previous node
     idx::Int    # index into nodes of the current node
 end
 
-struct List{T,S<:AbstractVector{T}}
+struct VectorBackedList{T,S<:AbstractVector{T}}
     data::S
-    nodes::Vector{Node}
+    nodes::Vector{Node{Int}}
     head::Int
     tail::Int
 end
 
-Base.eltype(::Type{List{T,S}}) where {S,T} = T
-Base.start(list::List) = list.nodes[1].next
-Base.next(list::List, state) = (list.data[list.nodes[state].value], list.nodes[state].next)
-Base.done(list::List, state) = (list.nodes[state].value == 0)
+Base.eltype(::Type{VectorBackedList{T,S}}) where {S,T} = T
+Base.start(list::VectorBackedList) = list.nodes[1].next
+Base.next(list::VectorBackedList, state) = (list.data[list.nodes[state].value], list.nodes[state].next)
+Base.done(list::VectorBackedList, state) = (list.nodes[state].value == 0)
 
-# Base.getindex(list::List, state) = list.data[list.nodes[state].value]
-# Base.setindex!(list::List, value, state) = (list.data[list.nodes[state].value] = value)
 
 """
     done(iterable) -> state
@@ -28,16 +26,16 @@ Base.done(list::List, state) = (list.nodes[state].value == 0)
 Produces an iterator state for which `done(iterable,state) == true`. Cf. to the
 c++ end() api.
 """
-Base.done(list::List) = list.tail
-Base.length(list::List) = length(list.data)
+Base.done(list::VectorBackedList) = list.tail
+Base.length(list::VectorBackedList) = length(list.data)
 
-Base.setindex!(list::List, v, state) = (list.data[list.nodes[state].value] = v)
-Base.getindex(list::List, state) = list.data[list.nodes[state].value]
+Base.setindex!(list::VectorBackedList, v, state) = (list.data[list.nodes[state].value] = v)
+Base.getindex(list::VectorBackedList, state) = list.data[list.nodes[state].value]
 
-advance(list::List, state) = next(list, state)[2]
+advance(list::VectorBackedList, state) = next(list, state)[2]
 
 # sublist iteration
-struct SubList{L<:List}
+struct SubList{L<:VectorBackedList}
     parent::L
     head::Int
     done::Int
@@ -81,7 +79,7 @@ function list(data)
     nodes[1] = Node(0,2,0,1)
     for i in 2:n+1; nodes[i] = Node(i-1, i+1, i-1, i); end
     nodes[end] = Node(0,0,n+1,n+2)
-    List{eltype(data), typeof(data)}(data, nodes, 1, n+2)
+    VectorBackedList{eltype(data), typeof(data)}(data, nodes, 1, n+2)
 end
 
 """
@@ -127,7 +125,7 @@ move_before!(ls::SubList, item, target) = move_before!(ls.parent, item, target)
 
 Insert `value` in `list` after the value pointed to by iterator `dest`.
 """
-function insert_after!(list::List, v, T)
+function insert_after!(list::VectorBackedList, v, T)
 
     data = list.data
     nodes = list.nodes

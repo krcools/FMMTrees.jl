@@ -2,8 +2,6 @@ export print_tree
 
 struct TreeNode{T}
     num_children::Int
-    # begin_idx::Int
-    # end_idx::Int
     data::T
 end
 
