@@ -53,31 +53,6 @@ function boundingbox(points)
     return ll, ur
 end
 
-# """
-# ee
-# """
-# function clustertree_impl2!(boxit, data)
-#
-#
-#     # remove empty sectors
-#     create_children!(boxit, data)
-#     for chd in children(boxit)
-#         clustertree_impl2!(chd, data)
-#     end
-#
-#     # for all non-empty child boxes
-#     #   recurse
-#
-# end
-#
-#
-# function create_children!(boxit, data)
-#
-#     # get the range from data of points in this box
-#     # sort this subrange according to sector and keep track of the subranges
-#     # create a childbox for every non-empty sector
-#
-# end
 
 """
     clustertree_impl!(points, boxes, boxit)
@@ -108,10 +83,10 @@ function clustertree_impl!(points, boxes, boxit)
     rbox = TreeNode(0, Box(α+n1, β, 1))
     lbox = TreeNode(0, Box(α, α+n1, 0))
 
-    insert_after!(boxes, rbox, boxit)
+    insert_after!(boxes, boxit, rbox)
     _, rboxit = next(boxes, boxit)
 
-    insert_after!(boxes, lbox, boxit)
+    insert_after!(boxes, boxit, lbox)
     _, lboxit = next(boxes, boxit)
 
     # move all points in the left box to the front

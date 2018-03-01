@@ -4,7 +4,8 @@ using Base.Test
 p = rand(20)
 q, b = FMMTrees.clustertree(p)
 
+tree = FMMTrees.VectorBackedTree(b)
 children = FMMTrees.children
 
-chdit = children(b)
-state = start(children(b))
+chdit = children(tree)
+state = start(children(tree))

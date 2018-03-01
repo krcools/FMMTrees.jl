@@ -12,10 +12,10 @@ _, q = next(dl, n) # q points at 4
 move_before!(dl, n, t)
 @test collect(dl) == [1,3,2,4]
 
-insert_after!(dl, 4, q)
+insert_after!(dl, q, 4)
 @test collect(dl) == [1,3,2,4,4]
 
-insert_after!(dl, 100, t)
+insert_after!(dl, t, 100)
 @test collect(dl) == [1,3,2,100,4,4]
 
 s100 = start(dl); for i in 1:3; _, s100 = next(dl, s100); end
@@ -40,3 +40,6 @@ end
 s = start(l)
 l[s] = 20
 @test a[1] == 20
+
+push!(l,21)
+@test collect(l) == [20,2,3,4,21]

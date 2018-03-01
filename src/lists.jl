@@ -32,12 +32,12 @@ Base.getindex(list::VectorBackedList, state) = list.data[list.nodes[state].value
 advance(list::VectorBackedList, state) = next(list, state)[2]
 Base.length(sl::VectorBackedList) = (n = 0; for x in sl; n += 1; end; n)
 
-# sublist iteration
-struct SubList{L<:VectorBackedList}
-    parent::L
-    head::Int
-    done::Int
-end
+# # sublist iteration
+# struct SubList{L<:VectorBackedList}
+#     parent::L
+#     head::Int
+#     done::Int
+# end
 
 sublist(ls, b, e) = VectorBackedList{eltype(ls),typeof(ls.data)}(ls.data, ls.nodes, ls.nodes[ls.nodes[b].prev].idx, e)
 
@@ -105,14 +105,12 @@ function move_before!(list, I, T)
     nothing
 end
 
-move_before!(ls::SubList, item, target) = move_before!(ls.parent, item, target)
-
 """
-    insert_after!(list, value, dest)
+    insert_after!(list, dest, value)
 
 Insert `value` in `list` after the value pointed to by iterator `dest`.
 """
-function insert_after!(list::VectorBackedList, v, T)
+function insert_after!(list::VectorBackedList, T, v)
 
     data = list.data
     nodes = list.nodes
@@ -131,4 +129,25 @@ function insert_after!(list::VectorBackedList, v, T)
     nothing
 end
 
-insert_after!(ls::SubList, value, target) = insert_after!(ls.parent, value, target)
+
+function insert_before!(list::VectorBackedList, T, v)
+
+    data = list.data
+    nodes = list.nodes
+
+    push!(data, v)
+
+    P = list.nodes[T].prev
+    t = nodes[T]
+    p = nodes[P]
+
+    I = length(nodes)+1
+    push!(nodes, Node(length(data), T, P, I))
+
+    nodes[T] = Node(t.value, t.next, I ,T)
+    nodes[P] = Node(p.value, I, p.prev, P)
+    nothing
+end
+
+
+Base.push!(list::VectorBackedList, v) = insert_before!(list, done(list), v)
