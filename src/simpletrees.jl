@@ -1,3 +1,8 @@
+module SimpleTrees
+
+using AbstractTrees
+using FMMTrees
+
 struct TreeNode{T}
     num_children::Int
     data::T
@@ -7,13 +12,24 @@ struct SimpleTree{V <: (AbstractVector{N} where {N<:TreeNode})}
     nodes::V
 end
 
-import ..FMMTrees: root
-root(tree::SimpleTree) = tree.nodes
 
-Base.start(itr::ChildView{T} where {T<:SimpleTree}) = (0, 2) # progess, relative_index
-Base.done(itr::ChildView{T} where {T<:SimpleTree}, state) = (state[1] == itr.tree[1].num_children)
-function Base.next(itr::ChildView{T} where {T<:SimpleTree}, state)
-    child = itr.tree[state[2]]
-    newstate = (state[1] + child.num_children + 1, state[2] + child.num_children + 1)
-    return view(itr.tree, state[2]:endof(itr.tree)) , newstate
+struct ChildView{T} tree::T end
+AbstractTrees.children(tree::SimpleTree) = collect(ChildView(tree))
+
+Base.iteratorsize(cv::ChildView) = Base.SizeUnknown()
+Base.start(itr::ChildView{T} where {T<:SimpleTree}) = (0, 2) # progress, relative_index
+function Base.done(itr::ChildView{T} where {T<:SimpleTree}, state)
+    return (state[1] == first(itr.tree.nodes).num_children)
 end
+function Base.next(itr::ChildView{T} where {T<:SimpleTree}, state)
+    child = itr.tree.nodes[state[2]]
+    newstate = (state[1] + child.num_children + 1, state[2] + child.num_children + 1)
+    return SimpleTree(view(itr.tree.nodes, state[2]:endof(itr.tree.nodes))), newstate
+end
+
+Base.getindex(tree::SimpleTree, i::Int) = tree.nodes[i]
+
+FMMTrees.data(tree::SimpleTree) = first(tree.nodes).data
+AbstractTrees.printnode(io::IO, tree::SimpleTree) = showcompact(io, data(tree))
+
+end # module SimpleTrees

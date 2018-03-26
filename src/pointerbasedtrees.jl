@@ -1,6 +1,7 @@
 module PointerBasedTrees
 
-using ..FMMTrees
+using AbstractTrees
+using FMMTrees
 
 struct Node{T}
     data::T
@@ -15,10 +16,19 @@ struct PointerBasedTree{N<:Node}
     root::Int
 end
 
-import FMMTreees: root, children, insertchild
-root(tree::PointerBasedTree) = tree.nodes[root]
-function insertchild(root, node)
-    
+struct ChildView{T} tree::T end
+Base.iteratorsize(cv::ChildView) = Base.SizeUnknown()
+AbstractTrees.children(tree::PointerBasedTree) = collect(ChildView(tree))
+
+Base.start(cv::ChildView) = (cv.tree.nodes[cv.tree.root].first_child)
+Base.done(cv::ChildView, idx) = (idx == -1)
+function Base.next(cv::ChildView, idx)
+    value = PointerBasedTree(cv.tree.nodes, idx)
+    idx = cv.tree.nodes[idx].next_sibling
+    return value, idx
 end
+
+FMMTrees.data(tree::PointerBasedTree) = tree.nodes[tree.root].data
+AbstractTrees.printnode(io::IO, tree::PointerBasedTree) = showcompact(io, data(tree))
 
 end # module PointerBasedTrees

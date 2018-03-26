@@ -1,33 +1,32 @@
-export print_tree
+export data
 
-export root, children, insertchild
+"""
+    data(node)
 
-function root end
-function children end
-function insertchild end
+Retrieve the data aka payload associated with the given node.
+"""
+function data end
 
-struct ChildView{T,N}
-    tree::T
-    node::N
-end
+# import AbstractTrees: print_tree, children
+# export print_tree, children
+#
+# export insertchild, data
+#
+# function insertchild end
+# function data end
+#
+#
+# function depthfirst(f, t, level = 1)
+#     f(t, level)
+#     for c in children(t)
+#         depthfirst(f, c, level+1)
+#     end
+# end
 
-Base.iteratorsize(cv::ChildView) = SizeUnknown()
-
-
-children(tree,node) = ChildView(tree,node)
-
-function depthfirst(f, t, n, level = 1)
-    f(t, n, level)
-    for c in children(t, n)
-        depthfirst(f, c, level+1)
-    end
-end
-
-function print_tree(tree)
-
-    depthfirst(tree, root(tree)) do node,level
-        print("-"^(level-1))
-        print(node[1].data)
-        println()
-    end
-end
+# function print_tree(tree)
+#     depthfirst(tree) do tree, level
+#         print("-"^(level-1))
+#         print(data(tree))
+#         println()
+#     end
+# end
