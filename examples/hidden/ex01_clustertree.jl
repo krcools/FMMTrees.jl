@@ -1,11 +1,12 @@
 using FMMTrees
 using StaticArrays
+using AdaptiveCrossApproximation
 
 p = rand(SVector{2,Float64}, 100)
-q, tree = FMMTrees.clustertree(p)
+q, tree = AdaptiveCrossApproximation.clustertree(p)
 
 using Plots
-plotlyjs()
+gr()
 
 
 rectangle(ll, ur) = [ll[1],ur[1],ur[1],ll[1],ll[1]], [ll[2],ll[2],ur[2],ur[2],ll[2]]

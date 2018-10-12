@@ -17,16 +17,18 @@ struct PointerBasedTree{N<:Node}
 end
 
 struct ChildView{T} tree::T end
-Base.iteratorsize(cv::ChildView) = Base.SizeUnknown()
+Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
 AbstractTrees.children(tree::PointerBasedTree) = collect(ChildView(tree))
 
-Base.start(cv::ChildView) = (cv.tree.nodes[cv.tree.root].first_child)
-Base.done(cv::ChildView, idx) = (idx == -1)
-function Base.next(cv::ChildView, idx)
+start(cv::ChildView) = (cv.tree.nodes[cv.tree.root].first_child)
+done(cv::ChildView, idx) = (idx == -1)
+function next(cv::ChildView, idx)
     value = PointerBasedTree(cv.tree.nodes, idx)
     idx = cv.tree.nodes[idx].next_sibling
     return value, idx
 end
+
+Base.iterate(cv::ChildView, s=start(cv)) = done(cv,s) ? nothing : next(cv,s)
 
 FMMTrees.data(tree::PointerBasedTree) = tree.nodes[tree.root].data
 AbstractTrees.printnode(io::IO, tree::PointerBasedTree) = showcompact(io, data(tree))
