@@ -17,12 +17,16 @@ struct PointerBasedTree{N<:Node}
 end
 
 struct ChildView{T} tree::T end
-Base.iteratorsize(cv::ChildView) = Base.SizeUnknown()
+Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
 AbstractTrees.children(tree::PointerBasedTree) = collect(ChildView(tree))
 
-Base.start(cv::ChildView) = (cv.tree.nodes[cv.tree.root].first_child)
-Base.done(cv::ChildView, idx) = (idx == -1)
-function Base.next(cv::ChildView, idx)
+function Base.iterate(cv::ChildView, state=start(cv))
+    done(cv) && return nothing
+    return next(cv, state)
+end
+start(cv::ChildView) = (cv.tree.nodes[cv.tree.root].first_child)
+done(cv::ChildView, idx) = (idx == -1)
+function next(cv::ChildView, idx)
     value = PointerBasedTree(cv.tree.nodes, idx)
     idx = cv.tree.nodes[idx].next_sibling
     return value, idx
