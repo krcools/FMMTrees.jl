@@ -20,6 +20,10 @@ struct ChildView{T} tree::T end
 Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
 AbstractTrees.children(tree::PointerBasedTree) = collect(ChildView(tree))
 
+function Base.iterate(cv::ChildView, state=start(cv))
+    done(cv) && return nothing
+    return next(cv, state)
+end
 start(cv::ChildView) = (cv.tree.nodes[cv.tree.root].first_child)
 done(cv::ChildView, idx) = (idx == -1)
 function next(cv::ChildView, idx)
