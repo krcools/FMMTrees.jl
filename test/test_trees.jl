@@ -1,6 +1,6 @@
 using FMMTrees
 using AbstractTrees
-using Base.Test
+using Test
 
 # p = rand(20)
 # q, b = FMMTrees.clustertree(p)
@@ -22,7 +22,7 @@ print_tree(tree)
 #children = FMMTrees.children
 
 chdit = children(tree)
-state = start(chdit)
+#state = start(chdit)
 
 @test data(tree) == "a"
 @test collect(data(ch) for ch in children(tree)) == ["b","e"]

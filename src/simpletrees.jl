@@ -24,7 +24,8 @@ end
 function next(itr::ChildView{T} where {T<:SimpleTree}, state)
     child = itr.tree.nodes[state[2]]
     newstate = (state[1] + child.num_children + 1, state[2] + child.num_children + 1)
-    return SimpleTree(view(itr.tree.nodes, state[2]:endof(itr.tree.nodes))), newstate
+    #return SimpleTree(view(itr.tree.nodes, state[2]:endof(itr.tree.nodes))), newstate
+    return SimpleTree(view(itr.tree.nodes, state[2]:lastindex(itr.tree.nodes))), newstate
 end
 
 function Base.iterate(itr::ChildView, state=start(itr))
@@ -34,6 +35,6 @@ end
 Base.getindex(tree::SimpleTree, i::Int) = tree.nodes[i]
 
 FMMTrees.data(tree::SimpleTree) = first(tree.nodes).data
-AbstractTrees.printnode(io::IO, tree::SimpleTree) = showcompact(io, data(tree))
+AbstractTrees.printnode(io::IO, tree::SimpleTree) = show(io, data(tree))
 
 end # module SimpleTrees

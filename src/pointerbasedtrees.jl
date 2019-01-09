@@ -31,6 +31,6 @@ end
 Base.iterate(cv::ChildView, s=start(cv)) = done(cv,s) ? nothing : next(cv,s)
 
 FMMTrees.data(tree::PointerBasedTree) = tree.nodes[tree.root].data
-AbstractTrees.printnode(io::IO, tree::PointerBasedTree) = showcompact(io, data(tree))
+AbstractTrees.printnode(io::IO, tree::PointerBasedTree) = show(io, data(tree))
 
 end # module PointerBasedTrees
