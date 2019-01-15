@@ -28,17 +28,18 @@ function children end
 # end
 
 function depthfirst(f, tree, node=root(tree), level=1)
-    f(tree, node, level)
+    f(tree, node, level) || return
     for c in FMMTrees.children(tree, node)
         depthfirst(f, tree, c, level+1)
     end
 end
 
-function print_tree(tree, node=root(tree))
+function print_tree(tree, node=root(tree); maxdepth=0)
     depthfirst(tree) do tree, node, level
         print("-"^(level-1))
         print(data(tree, node))
         println()
+        return level == maxdepth ? false : true
     end
 end
 
@@ -68,3 +69,35 @@ function update!(tree, node, data, router!, updater!)
     updater!(tree, node, data)
     return node
 end
+
+struct DepthFirstIterator{T,N}
+    tree::T
+    node::N
+end
+
+function Base.iterate(itr::DepthFirstIterator)
+    chitr = children(itr.tree,itr.node)
+    stack = Any[(chitr, iterate(chitr))]
+    iterate(itr, stack)
+end
+
+function Base.iterate(itr::DepthFirstIterator, stack)
+    isempty(stack) && return nothing
+    while true
+        chditr, next = last(stack)
+        if next != nothing
+            node, state = next
+            chitr = children(itr.tree, node)
+            push!(stack, (chitr, iterate(chitr)))
+        else
+            pop!(stack)
+            isempty(stack) && return (itr.node, stack)
+            chitr, (node, state) = last(stack)
+            stack[end] = (chitr, iterate(chitr, state))
+            return node, stack
+        end
+    end
+end
+
+
+depthfirst(tree, node=root(tree)) = DepthFirstIterator(tree,node)

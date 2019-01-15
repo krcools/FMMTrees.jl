@@ -22,9 +22,6 @@ struct ChildView{T,N}
     tree::T
     node::N
 end
-Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
-# AbstractTrees.children(tree::PointerBasedTree) = collect(ChildView(tree, FMMTrees.root(tree)))
-FMMTrees.children(tree::PointerBasedTree, node=FMMTrees.root(tree)::Node) = collect(ChildView(tree, node))
 
 function Base.iterate(itr::ChildView)
     itr.node.first_child < 1 && return iterate(itr, nothing)
@@ -37,6 +34,8 @@ function Base.iterate(itr::ChildView, state)
     return state, itr.tree.nodes[state.next_sibling]
 end
 
+Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
+FMMTrees.children(tree::PointerBasedTree, node=FMMTrees.root(tree)::Node) = collect(ChildView(tree, node))
 
 # start(cv::ChildView) = (cv.tree.nodes[cv.tree.root].first_child)
 # done(cv::ChildView, idx) = (idx == -1)
