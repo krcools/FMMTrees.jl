@@ -25,21 +25,20 @@ c2 == SVector{3,Float64}(0.5,1.5,0.5)
 h = 0.5
 
 function router!(tree, state)
-    node, center, size, idx = state
+    node_idx, center, size = state
+    node = tree.nodes[node_idx]
     size <= smallest_box_size && return state
     child_sector, child_center, child_size = sector_center_size(point, center, size)
     for child in FMMTrees.children(tree, node)
         child.data.sector == child_sector && return (child, child_center, child_size)
     end
-    new_child = FMMTrees.PointerBasedTrees.Node(
-        Data(child_sector, Int[]), 0, node.first_child, idx, 0)
-    push!(tree.nodes, new_child)
-    tree.nodes[idx].first_child = length(tree.nodes)
-    return new_child, child_center, child_size, length(tree.nodes)
+    data = Data(child_sector, Int[])
+    FMMTrees.PointerBasedTrees.insert_child!(tree, node_idx, data)
+    return length(tree.nodes), child_center, child_size
 end
 
 function updater!(tree, state, data)
-    push!(state[1].data.values, data)
+    push!(tree.nodes[state[1]].data.values, data)
 end
 
 
@@ -49,7 +48,7 @@ tree = FMMTrees.PointerBasedTrees.PointerBasedTree(
 
 smallest_box_size = 0.1
 point = SVector{3,Float64}(0,3,-2)
-state = (tree.nodes[tree.root], SVector{3,Float64}(1,1,1), 1.0, tree.root)
+state = (tree.root, SVector{3,Float64}(1,1,1), 1.0)
 
 FMMTrees.update!(tree, state, 123, router!, updater!)
 

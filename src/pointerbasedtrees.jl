@@ -52,7 +52,12 @@ FMMTrees.data(tree::PointerBasedTree, node=FMMTrees.root(tree)) = node.data
 # AbstractTrees.printnode(io::IO, tree::PointerBasedTree) = show(io, data(tree))
 
 
-
+function insert_child!(tree::PointerBasedTree, parent_idx, data)
+    parn = tree.nodes[parent_idx]
+    node = FMMTrees.PointerBasedTrees.Node(data, 0, parn.first_child, parent_idx, 0)
+    push!(tree.nodes, node)
+    parn.first_child = length(tree.nodes)
+end
 
 
 end # module PointerBasedTrees
