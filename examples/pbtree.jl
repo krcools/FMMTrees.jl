@@ -26,15 +26,15 @@ h = 0.5
 
 function router!(tree, state)
     node_idx, center, size = state
-    node = tree.nodes[node_idx]
     size <= smallest_box_size && return state
     child_sector, child_center, child_size = sector_center_size(point, center, size)
-    for child in FMMTrees.children(tree, node)
-        child.data.sector == child_sector && return (child, child_center, child_size)
+    for child in FMMTrees.children(tree, node_idx)
+        d = FMMTrees.data(tree,child)
+        d.sector == child_sector && return (child, child_center, child_size)
     end
     data = Data(child_sector, Int[])
-    FMMTrees.PointerBasedTrees.insert_child!(tree, node_idx, data)
-    return length(tree.nodes), child_center, child_size
+    new_node_idx = FMMTrees.PointerBasedTrees.insert_child!(tree, node_idx, data)
+    return new_node_idx, child_center, child_size
 end
 
 function updater!(tree, state, data)
@@ -59,6 +59,10 @@ end
 
 FMMTrees.print_tree(tree)
 
-for node in FMMTrees.DepthFirstIterator(tree)
-    println(node.data)
+num_printed = 0
+for node in FMMTrees.DepthFirstIterator(tree, tree.root)
+    println(node, ", ", FMMTrees.data(tree,node))
+    global num_printed += 1
 end
+
+@assert num_printed == length(tree.nodes)
