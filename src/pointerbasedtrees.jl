@@ -16,26 +16,28 @@ struct PointerBasedTree{N<:Node}
     root::Int
 end
 
-FMMTrees.root(tree::PointerBasedTree) = tree.nodes[tree.root]
+FMMTrees.root(tree::PointerBasedTree) = tree.root
+getnode(tree::PointerBasedTree, node_idx) = tree.nodes[node_idx]
 
 struct ChildView{T,N}
     tree::T
-    node::N
+    node_idx::N
 end
 
 function Base.iterate(itr::ChildView)
-    itr.node.first_child < 1 && return iterate(itr, nothing)
-    iterate(itr, itr.tree.nodes[itr.node.first_child])
+    node = getnode(itr.tree, itr.node_idx)
+    # node.first_child < 1 && return iterate(itr, nothing)
+    iterate(itr, node.first_child)
 end
 
 function Base.iterate(itr::ChildView, state)
-    state == nothing && return nothing
-    state.next_sibling < 1 && return (state, nothing)
-    return state, itr.tree.nodes[state.next_sibling]
+    state < 1 && return nothing
+    sibling_idx = getnode(itr.tree, state).next_sibling
+    return (state, sibling_idx)
 end
 
 Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
-FMMTrees.children(tree::PointerBasedTree, node=FMMTrees.root(tree)::Node) = collect(ChildView(tree, node))
+FMMTrees.children(tree::PointerBasedTree, node=FMMTrees.root(tree)::Node) = ChildView(tree, node)
 
 # start(cv::ChildView) = (cv.tree.nodes[cv.tree.root].first_child)
 # done(cv::ChildView, idx) = (idx == -1)
@@ -47,7 +49,7 @@ FMMTrees.children(tree::PointerBasedTree, node=FMMTrees.root(tree)::Node) = coll
 #
 # Base.iterate(cv::ChildView, s=start(cv)) = done(cv,s) ? nothing : next(cv,s)
 
-FMMTrees.data(tree::PointerBasedTree, node=FMMTrees.root(tree)) = node.data
+FMMTrees.data(tree::PointerBasedTree, node=FMMTrees.root(tree)) = getnode(tree, node).data
 # AbstractTrees.printnode(io::IO, tree::PointerBasedTree) = show(io, data(tree))
 
 

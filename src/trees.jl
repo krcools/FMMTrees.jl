@@ -9,6 +9,20 @@ function data end
 
 
 function root end
+
+"""
+    The expression `children(tree,node)` returns an iterator that will produce
+    a sequence of node iterators. These values do not have a lot of meaning by
+    themselves, but can be used in conjunction with the tree object. E.g:
+
+        data(tree, node_itr)
+        children(tree, node_itr)
+
+    In fact, the node iterators should be regarded as lightweight proxies for
+    the underlying node and their attached data payload. The node objects
+    themselves are of limited use for the client programmer as they are an
+    implementation detail of the specific tree being used.
+"""
 function children end
 
 # import AbstractTrees: print_tree, children
@@ -27,6 +41,11 @@ function children end
 #     end
 # end
 
+"""
+Traverse the tree depth first, executing the function `f(tree, node, level)`
+at every node. If `f` returns `false`, recursion is halted and the next node
+on the current level is visited.
+"""
 function depthfirst(f, tree, node=root(tree), level=1)
     f(tree, node, level) || return
     for c in FMMTrees.children(tree, node)
@@ -99,5 +118,7 @@ function Base.iterate(itr::DepthFirstIterator, stack)
     end
 end
 
-
-depthfirst(tree, node=root(tree)) = DepthFirstIterator(tree,node)
+"""
+Return a depth first iterator for tree.
+"""
+DepthFirstIterator(tree,node)

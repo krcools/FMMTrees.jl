@@ -47,14 +47,18 @@ tree = FMMTrees.PointerBasedTrees.PointerBasedTree(
     N[N(Data(), 0, 0, 0, 0)], 1)
 
 smallest_box_size = 0.1
-root_center = SVector{3,Float64}(1,1,1)
-point = SVector{3,Float64}(0,3,-2)
-state = (tree.root, root_center, 1.0)
+root_center = SVector{3,Float64}(0,0,0)
+root_size = 1.0
+for i in 1:100
+    global point = rand(SVector{3,Float64})
+    state = (tree.root, root_center, root_size)
+    FMMTrees.update!(tree, state, i, router!, updater!)
+end
 
-FMMTrees.update!(tree, state, 123, router!, updater!)
+
 
 FMMTrees.print_tree(tree)
 
-# for node in FMMTrees.depthfirst(tree)
-#     println(node.data)
-# end
+for node in FMMTrees.DepthFirstIterator(tree)
+    println(node.data)
+end
