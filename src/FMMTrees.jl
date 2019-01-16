@@ -13,4 +13,6 @@ include("pointerbasedtrees.jl")
 #include("cluster_tree.jl")
 #include("aca.jl")
 
+include("octree.jl")
+
 end # module

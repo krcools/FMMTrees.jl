@@ -33,7 +33,7 @@ function router!(tree, state)
         d.sector == child_sector && return (child, child_center, child_size)
     end
     data = Data(child_sector, Int[])
-    new_node_idx = FMMTrees.PointerBasedTrees.insert_child!(tree, node_idx, data)
+    new_node_idx = FMMTrees.PointerBasedTrees.insert!(tree, node_idx, data)
     return new_node_idx, child_center, child_size
 end
 

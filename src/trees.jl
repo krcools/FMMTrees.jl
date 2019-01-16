@@ -1,12 +1,31 @@
+export data
+export children
+export update!
+export insert!
+export root
+
 """
-    data(node)
+    data(tree, node)
 
 Retrieve the data aka payload associated with the given node.
 """
 function data end
 
 
+"""
+    root(tree)
+
+Return a proxy for the root of the tree.
+"""
 function root end
+
+
+"""
+    insert!(tree, parent, data)
+
+Insert a node carrying 'data' as a new child of 'parent'
+"""
+function insert! end
 
 """
     The expression `children(tree,node)` returns an iterator that will produce
