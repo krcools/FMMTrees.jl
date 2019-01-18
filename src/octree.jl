@@ -18,6 +18,8 @@ struct Octree{T}
     end
 end
 
+Base.length(itr::FMMTrees.DepthFirstIterator{T}) where {T<:Octree} = length(itr.tree.pbtree.nodes)
+
 FMMTrees.data(tree::Octree, node) = data(tree.pbtree, node)
 FMMTrees.children(tree::Octree, node) = children(tree.pbtree, node)
 FMMTrees.insert!(tree::Octree, node, data) = FMMTrees.insert!(tree.pbtree, node, data)
