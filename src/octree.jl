@@ -21,6 +21,7 @@ end
 FMMTrees.data(tree::Octree, node) = data(tree.pbtree, node)
 FMMTrees.children(tree::Octree, node) = children(tree.pbtree, node)
 FMMTrees.insert!(tree::Octree, node, data) = FMMTrees.insert!(tree.pbtree, node, data)
+FMMTrees.insert!(tree::Octree, data; before, parent, prev) = FMMTrees.insert!(tree.pbtree, data, before=before, parent=parent, prev=prev)
 FMMTrees.root(tree::Octree) = root(tree.pbtree)
 
 const hilbert_states = [
@@ -70,22 +71,43 @@ function (f::Router)(tree, state)
     point = f.target_point
     smallest_box_size = f.smallest_box_size
 
-    node_idx, center, size = state
+    node_idx, center, size, sfc_state = state
     size <= smallest_box_size && return state
     child_sector, child_center, child_size = sector_center_size(point, center, size)
+    child_sfc_state = hilbert_states[sfc_state][child_sector+1] + 1
     for child in FMMTrees.children(tree, node_idx)
         d = FMMTrees.data(tree,child)
-        d.sector == child_sector && return (child, child_center, child_size)
+        if d.sector == child_sector
+            return (child, child_center, child_size, child_sfc_state)
+        end
     end
     data = Data(child_sector, Int[])
-    new_node_idx = FMMTrees.insert!(tree, node_idx, data)
-    return new_node_idx, child_center, child_size
+    new_node_idx = FMMTrees.insert!(tree, (node_idx, sfc_state), data)
+    return new_node_idx, child_center, child_size, child_sfc_state
 end
 
 
 function updater!(tree, (node, center, size), data)
-    # push!(tree.nodes[state[1]].data.values, data)
     push!(FMMTrees.data(tree, node).values, data)
 end
 
+
+function FMMTrees.insert!(tree::Octree, (parent, sfc_state), data)
+
+    target_pos = hilbert_positions[sfc_state][data.sector+1] + 1
+    prev = 0
+    found = false
+    for child in children(tree, parent)
+        child_sector = FMMTrees.data(tree, child)
+        child_pos = hilbert_positions[sfc_state][child_sector+1] + 1
+        if child_pos > target_pos
+            return FMMTrees.insert!(tree, data, before=child, prev=prev, parent=parent)
+        end
+        prev = child
+    end
+
+    return FMMTrees.insert!(tree, data, before=0, prev=prev, parent=parent)
 end
+
+
+end # module

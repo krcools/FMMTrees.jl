@@ -54,4 +54,27 @@ function FMMTrees.insert!(tree::PointerBasedTree, parent_idx, data)
     parn.first_child = length(tree.nodes)
 end
 
+
+"""
+    insert!(tree, data, before=bef, parent=par, prev=prev)
+
+Insert a new node carrying data such that the next sibling of this new node
+will be `bef`. The parent node and the previous node to `bef` are required
+to update all links in the data structure. If `bef` is the first child of `par`,
+the previous node `prev` should be pasesed as `0`. Similarly, if the new node
+should be inserted as the last child, `bef` should be passed as `0`. In the
+special case of a parent node without any existing children, both `bef` and `par`
+should be set to `0`.
+"""
+function FMMTrees.insert!(tree::PointerBasedTree, data; before, parent, prev)
+    node = Node(data, 0, before, parent, 0)
+    push!(tree.nodes, node)
+    if prev < 1
+        getnode(tree, parent).first_child = length(tree.nodes)
+    else
+        getnode(tree, prev).next_sibling = length(tree.nodes)
+    end
+    return length(tree.nodes)
+end
+
 end
