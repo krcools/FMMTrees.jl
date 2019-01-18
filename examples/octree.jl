@@ -6,16 +6,15 @@ tree = FMMTrees.Octrees.Octree(Int[])
 smallest_box_size = 0.1
 root_center = SVector{3,Float64}(0,0,0)
 root_size = 1.0
-# for i in 1:100
-    i = 1
+for i in 1:100
     target_point = rand(SVector{3,Float64})
     router! = FMMTrees.Octrees.Router(smallest_box_size, target_point)
+
+    # router!(tree, state)
+
     state = (root(tree), root_center, root_size, 1)
-
-    router!(tree, state)
-
     update!(tree, state, i, router!, FMMTrees.Octrees.updater!)
-# end
+end
 
 FMMTrees.print_tree(tree)
 

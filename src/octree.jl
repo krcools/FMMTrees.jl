@@ -98,7 +98,7 @@ function FMMTrees.insert!(tree::Octree, (parent, sfc_state), data)
     prev = 0
     found = false
     for child in children(tree, parent)
-        child_sector = FMMTrees.data(tree, child)
+        child_sector = FMMTrees.data(tree, child).sector
         child_pos = hilbert_positions[sfc_state][child_sector+1] + 1
         if child_pos > target_pos
             return FMMTrees.insert!(tree, data, before=child, prev=prev, parent=parent)
