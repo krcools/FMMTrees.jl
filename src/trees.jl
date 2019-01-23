@@ -73,7 +73,7 @@ end
 function print_tree(tree, node=root(tree); maxdepth=0)
     depthfirst(tree) do tree, node, level
         print("-"^(level-1))
-        print(data(tree, node))
+        print(FMMTrees.PointerBasedTrees.getnode(tree, node))
         println()
         return level == maxdepth ? false : true
     end

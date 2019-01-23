@@ -24,17 +24,60 @@ s == 2
 c2 == SVector{3,Float64}(0.5,1.5,0.5)
 h = 0.5
 
-function router!(tree, state)
-    node_idx, center, size = state
-    size <= smallest_box_size && return state
+
+# function lastchild(tree, parent)
+#     chds = collect(children(tree, parent))
+#     return last(chds)
+# end
+
+function lastnonemptychild(tree,node)
+    @assert FMMTrees.PointerBasedTrees.getnode(tree,node).first_child >= 1
+    r = 0
+    for chd in children(tree, node)
+        if !(FMMTrees.PointerBasedTrees.getnode(tree,chd).first_child < 1)
+            r = chd
+        end
+    end
+    return r
+end
+
+
+function lastchild(tree,node)
+    @assert FMMTrees.PointerBasedTrees.getnode(tree,node).first_child >= 1
+    r = 0
+    for chd in children(tree, node)
+        r = chd
+    end
+    return r
+end
+
+function router!(tree::FMMTrees.PointerBasedTrees.PointerBasedTree, state)
+    parent, center, size, prev_par = state
+    if !(prev_par < 1)
+        @assert FMMTrees.PointerBasedTrees.getnode(tree, prev_par).first_child >= 1
+    end
+    if size <= smallest_box_size
+        println("Bingo")
+        return state
+    end
     child_sector, child_center, child_size = sector_center_size(target_point, center, size)
-    for child in FMMTrees.children(tree, node_idx)
+    prev_fat_child = prev_par < 1 ? 0 : lastnonemptychild(tree, prev_par)
+    prev_child = prev_par < 1 ? 0 : lastchild(tree, prev_par)
+    for child in FMMTrees.children(tree, parent)
         d = FMMTrees.data(tree,child)
-        d.sector == child_sector && return (child, child_center, child_size)
+        if d.sector == child_sector
+            return (child, child_center, child_size, prev_fat_child)
+        end
+        if !(FMMTrees.PointerBasedTrees.getnode(tree, child).first_child < 1)
+            prev_fat_child = child
+        end
+        prev_child = child
     end
     data = Data(child_sector, Int[])
-    new_node_idx = FMMTrees.insert!(tree, node_idx, data)
-    return new_node_idx, child_center, child_size
+    bef = prev_child < 1 ? 0 : FMMTrees.PointerBasedTrees.getnode(tree, prev_child).next_sibling
+    @show child_sector, parent, bef, prev_child
+    child = FMMTrees.insert!(tree, data, parent=parent, before=bef, prev=prev_child)
+    return child, child_center, child_size, prev_fat_child
 end
 
 function updater!(tree, state, data)
@@ -46,13 +89,19 @@ const N = FMMTrees.PointerBasedTrees.Node{Data}
 tree = FMMTrees.PointerBasedTrees.PointerBasedTree(
     N[N(Data(), 0, 0, 0, 0)], 1)
 
-smallest_box_size = 0.1
+smallest_box_size = 0.2
 root_center = SVector{3,Float64}(0,0,0)
 root_size = 1.0
-num_points = 100
+root_prev = 0
+using DelimitedFiles
+Q = readdlm("points.dlm", Float64)
+points = [SVector{3,Float64}(Q[i,:]) for i in axes(Q,1)]
+#points = [ rand(SVector{3,Float64}) for i in 1:10 ]
+num_points = length(points)
 for i in 1:num_points
-    global target_point = rand(SVector{3,Float64})
-    state = (tree.root, root_center, root_size)
+    global target_point = points[i] #rand(SVector{3,Float64})
+    @show target_point
+    state = (tree.root, root_center, root_size, root_prev)
     FMMTrees.update!(tree, state, i, router!, updater!)
 end
 

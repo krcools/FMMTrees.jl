@@ -50,10 +50,12 @@ FMMTrees.data(tree::PointerBasedTree, node=FMMTrees.root(tree)) = getnode(tree, 
 Insert a node carrying `data` as the first child of `parent`
 """
 function FMMTrees.insert!(tree::PointerBasedTree, parent_idx, data)
-    parn = getnode(tree, parent_idx)
-    node = FMMTrees.PointerBasedTrees.Node(data, 0, parn.first_child, parent_idx, 0)
-    push!(tree.nodes, node)
-    parn.first_child = length(tree.nodes)
+    # parn = getnode(tree, parent_idx)
+    # node = FMMTrees.PointerBasedTrees.Node(data, 0, parn.first_child, parent_idx, 0)
+    # push!(tree.nodes, node)
+    # parn.first_child = length(tree.nodes)
+    bef = getnode(tree, parent_idx).first_child
+    FMMTrees.insert!(tree, data, parent=parent_idx, before=bef, prev=0)
 end
 
 
@@ -74,9 +76,22 @@ linked list implementation of `PointerBasedTree`.
 function FMMTrees.insert!(tree::PointerBasedTree, data; parent, before, prev)
     node = Node(data, 0, before, parent, 0)
     push!(tree.nodes, node)
-    if prev < 1
+    #if prev < 1
+    @assert !(parent < 1)
+
+    # if getnode(tree, parent).first_child == before
+    #     getnode(tree, parent).first_child = length(tree.nodes)
+    # end
+
+    # if before < 1 || getnote(tree, before).parent != parent
+    #     getnode(tree, parent).first_child = length(tree.nodes)
+    # end
+
+    fs = getnode(tree, parent).first_child
+    if fs < 1 || fs == before
         getnode(tree, parent).first_child = length(tree.nodes)
-    else
+    end
+    if !(prev < 1)
         getnode(tree, prev).next_sibling = length(tree.nodes)
     end
     return length(tree.nodes)
