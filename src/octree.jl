@@ -8,6 +8,14 @@ struct Data{T}
     values::Vector{T}
 end
 
+"""
+An octree behaves like a pointer based tree, specifically designed for the
+storage of data residing in Euclidian space. The routing and insertion methods
+maintain a Hilbert space filling curve order.
+
+This makes the Octree ideal as the basis for ordering algorithms aimed at
+preserving data locality (in the context of e.g. parallellism).
+"""
 struct Octree{T}
     pbtree::FMMTrees.PointerBasedTrees.PointerBasedTree{FMMTrees.PointerBasedTrees.Node{Data{T}}}
     function Octree(value::Vector{T}) where {T}
@@ -20,9 +28,9 @@ end
 
 Base.length(itr::FMMTrees.DepthFirstIterator{T}) where {T<:Octree} = length(itr.tree.pbtree.nodes)
 
+# Delegation of the PointerBasedTree API implementation to the pbtree field
 FMMTrees.data(tree::Octree, node) = data(tree.pbtree, node)
 FMMTrees.children(tree::Octree, node) = children(tree.pbtree, node)
-FMMTrees.insert!(tree::Octree, node, data) = FMMTrees.insert!(tree.pbtree, node, data)
 FMMTrees.insert!(tree::Octree, data; before, parent, prev) = FMMTrees.insert!(tree.pbtree, data, before=before, parent=parent, prev=prev)
 FMMTrees.root(tree::Octree) = root(tree.pbtree)
 
@@ -54,10 +62,16 @@ const hilbert_positions = [
     [4,5,7,6,3,2,0,1],
     [6,1,7,0,5,2,4,3]]
 
+
+"""
+Return the center of the child box and its sector based on the relative
+positioning of the parent center `ct` and the target point `pt`. Descending
+a level will half the *half size* `hs`.
+"""
 function sector_center_size(pt, ct, hs)
     hs = hs / 2
-    bl = SVector([x > y for (x,y) in zip(pt,ct)]...)
-    ct = SVector([b ? y+hs : y-hs for (b,y) in zip(bl,ct)]...)
+    bl = pt .> ct
+    ct = ifelse.(bl, ct.+hs, ct.-hs)
     sc = sum(b ? 2^(i-1) : 0 for (i,b) in enumerate(bl))
     return sc, ct, hs
 end
@@ -93,6 +107,13 @@ function updater!(tree, (node, center, size), data)
     push!(FMMTrees.data(tree, node).values, data)
 end
 
+
+# function FMMTrees.update!(f, tree::Octree, data, point, sbs)
+#     root_state = ...
+#     router! = Router(sbs, point)
+#     updater!(tree, state, data) = setnode!(tree, state[1], data)
+#     FMMTrees.update!(tree, root_state, data, router!, updater!)
+# end
 
 function FMMTrees.insert!(tree::Octree, (parent, sfc_state), data)
 
