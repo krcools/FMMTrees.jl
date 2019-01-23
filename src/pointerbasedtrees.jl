@@ -43,6 +43,7 @@ end
 Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
 FMMTrees.children(tree::PointerBasedTree, node=FMMTrees.root(tree)::Node) = ChildView(tree, node)
 FMMTrees.data(tree::PointerBasedTree, node=FMMTrees.root(tree)) = getnode(tree, node).data
+FMMTrees.haschildren(tree::PointerBasedTree, node) = (getnode(tree,node).first_child >= 1)
 
 """
     insert!(tree, parent, data)
@@ -74,18 +75,8 @@ It may seem redundant to pass also `prev`, but this is a necessity of the single
 linked list implementation of `PointerBasedTree`.
 """
 function FMMTrees.insert!(tree::PointerBasedTree, data; parent, before, prev)
-    node = Node(data, 0, before, parent, 0)
-    push!(tree.nodes, node)
-    #if prev < 1
+    push!(tree.nodes, Node(data, 0, before, parent, 0))
     @assert !(parent < 1)
-
-    # if getnode(tree, parent).first_child == before
-    #     getnode(tree, parent).first_child = length(tree.nodes)
-    # end
-
-    # if before < 1 || getnote(tree, before).parent != parent
-    #     getnode(tree, parent).first_child = length(tree.nodes)
-    # end
 
     fs = getnode(tree, parent).first_child
     if fs < 1 || fs == before

@@ -42,6 +42,8 @@ function insert! end
 """
 function children end
 
+function haschildren end
+
 # import AbstractTrees: print_tree, children
 # export print_tree, children
 #
