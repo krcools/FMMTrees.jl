@@ -30,7 +30,12 @@ function Base.iterate(itr::ChildView)
 end
 
 function Base.iterate(itr::ChildView, state)
+    # Check if state is a valid node pointer
     state < 1 && return nothing
+    # If yes, check that the parent of the corresponding node equals
+    # the original parent. If not, we are looking at a distant *cousin*
+    sibling_par = getnode(itr.tree, state).parent
+    sibling_par != itr.node_idx && return nothing
     sibling_idx = getnode(itr.tree, state).next_sibling
     return (state, sibling_idx)
 end
