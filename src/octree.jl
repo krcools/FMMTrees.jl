@@ -28,11 +28,14 @@ end
 
 Base.length(itr::FMMTrees.DepthFirstIterator{T}) where {T<:Octree} = length(itr.tree.pbtree.nodes)
 
-# Delegation of the PointerBasedTree API implementation to the pbtree field
+# Tree API
 FMMTrees.data(tree::Octree, node) = data(tree.pbtree, node)
 FMMTrees.children(tree::Octree, node) = children(tree.pbtree, node)
 FMMTrees.insert!(tree::Octree, data; before, parent, prev) = FMMTrees.insert!(tree.pbtree, data, before=before, parent=parent, prev=prev)
 FMMTrees.root(tree::Octree) = root(tree.pbtree)
+
+# PointerBasedTrees API
+FMMTrees.PointerBasedTrees.getnode(tree::Octree, node)  = getnode(tree.pbtree, node)
 
 const hilbert_states = [
     [1, 2, 3, 2, 4, 5, 3, 5],
