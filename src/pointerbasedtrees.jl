@@ -51,10 +51,6 @@ FMMTrees.haschildren(tree::PointerBasedTree, node) = (getnode(tree,node).first_c
 Insert a node carrying `data` as the first child of `parent`
 """
 function FMMTrees.insert!(tree::PointerBasedTree, parent_idx, data)
-    # parn = getnode(tree, parent_idx)
-    # node = FMMTrees.PointerBasedTrees.Node(data, 0, parn.first_child, parent_idx, 0)
-    # push!(tree.nodes, node)
-    # parn.first_child = length(tree.nodes)
     bef = getnode(tree, parent_idx).first_child
     FMMTrees.insert!(tree, data, parent=parent_idx, before=bef, prev=0)
 end

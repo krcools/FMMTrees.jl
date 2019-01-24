@@ -6,7 +6,7 @@ struct Data
     values::Vector{Int}
 end
 
-Data() = Data(0, Int[])
+Data(s=0) = Data(s, Int[])
 
 function sector_center_size(pt, ct, hs)
     hs = hs / 2
@@ -50,14 +50,14 @@ struct Router{P,T}
     smallest_box_size::T
 end
 
-function reached(router, meta)
+function reached(tree, target, meta)
     sector, center, size = meta
-    return size <= router.smallest_box_size
+    return size <= target.smallest_box_size
 end
 
-function directions(router, meta)
+function directions(tree, target, meta)
     sector, center, size = meta
-    return sector_center_size(router.target_point, center, size)
+    return sector_center_size(target.target_point, center, size)
 end
 
 function isontherighttrack(tree, node, meta)
@@ -67,18 +67,18 @@ end
 
 function newnode!(tree, node, prev, meta)
     sector, center, size = meta
-    data = Data(sector, Int[])
+    data = Data(sector)
     bef = prev < 1 ? 0 : FMMTrees.PointerBasedTrees.getnode(tree, prev).next_sibling
     FMMTrees.insert!(tree, data, parent=node, before=bef, prev=prev)
 end
 
-function (router!::Router)(tree::FMMTrees.PointerBasedTrees.PointerBasedTree, state)
+function FMMTrees.route!(tree::FMMTrees.PointerBasedTrees.PointerBasedTree, state, target)
 
     (parent, prev_fat_par, meta) = state
     @assert prev_fat_par < 1 || FMMTrees.haschildren(tree, prev_fat_par)
-    reached(router!, meta) && return state
+    reached(tree, target, meta) && return state
 
-    meta = directions(router!, meta)
+    meta = directions(tree, target, meta)
     prev_fat_child = prev_fat_par < 1 ? 0 : lastnonemptychild(tree, prev_fat_par)
     prev_child = prev_fat_par < 1 ? 0 : lastchild(tree, prev_fat_par)
     for child in FMMTrees.children(tree, parent)

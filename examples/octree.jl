@@ -9,14 +9,25 @@ mesh = meshsphere(1.0, 0.15)
 # points = [rand(P) for i in 1:800]
 points = vertices(mesh)
 
+struct OTRouter
+    smallest_box_size::Float64
+    target_point::P
+end
+
+FMMTrees.route!(t::FMMTrees.Octrees.Octree, state, router) = FMMTrees.Octrees.route!(t, state, router)
+
 smallest_box_size = 0.1
+root_sector = 0
 root_center = P(0,0,0)
 root_size = 1.0
 for i in 1:length(points)
-    target_point = points[i]
-    router! = FMMTrees.Octrees.Router(smallest_box_size, target_point)
-    state = (root(tree), root_center, root_size, 1)
-    update!(tree, state, i, router!, FMMTrees.Octrees.updater!)
+    router = OTRouter(smallest_box_size, points[i])
+    # target_point = points[i]
+    # router! = FMMTrees.Octrees.Router(smallest_box_size, target_point)
+    # meta = root_sector, root_center, root_size
+    root_state = root(tree), root_center, root_size, 1
+    # state = (root(tree), root_center, root_size, 1)
+    update!(tree, root_state, i, router, FMMTrees.Octrees.updater!)
 end
 
 FMMTrees.print_tree(tree)

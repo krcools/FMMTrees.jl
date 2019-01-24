@@ -35,7 +35,7 @@ FMMTrees.insert!(tree::Octree, data; before, parent, prev) = FMMTrees.insert!(tr
 FMMTrees.root(tree::Octree) = root(tree.pbtree)
 
 # PointerBasedTrees API
-FMMTrees.PointerBasedTrees.getnode(tree::Octree, node)  = getnode(tree.pbtree, node)
+FMMTrees.PointerBasedTrees.getnode(tree::Octree, node)  = FMMTrees.PointerBasedTrees.getnode(tree.pbtree, node)
 
 const hilbert_states = [
     [1, 2, 3, 2, 4, 5, 3, 5],
@@ -85,10 +85,10 @@ struct Router{T,P}
     target_point::P
 end
 
-function (f::Router)(tree, state)
+function route!(tree::Octree, state, router)
 
-    point = f.target_point
-    smallest_box_size = f.smallest_box_size
+    point = router.target_point
+    smallest_box_size = router.smallest_box_size
 
     node_idx, center, size, sfc_state = state
     size <= smallest_box_size && return state

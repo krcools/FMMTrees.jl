@@ -81,6 +81,9 @@ function print_tree(tree, node=root(tree); maxdepth=0)
     end
 end
 
+
+function route! end
+
 """
     update!(tree, node, data, router!, updater!)
 
@@ -98,9 +101,9 @@ indicated by returning the same node that was passed as the second argument.
 Update the destination node `node`. Typically, `data` is added in some sense
 to the data residing at the desitination node.
 """
-function update!(tree, node, data, router!, updater!)
+function update!(tree, node, data, router, updater!)
     while true
-        dest_node = router!(tree, node)
+        dest_node = route!(tree, node, router)
         dest_node == node && break
         node = dest_node
     end
