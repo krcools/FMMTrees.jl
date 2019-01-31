@@ -16,86 +16,49 @@ function sector_center_size(pt, ct, hs)
     return sc, ct, hs
 end
 
-c = SVector{3,Float64}(1,1,1)
-p = SVector{3,Float64}(0,3,-2)
-
-s, c2, h = sector_center_size(p, c, 1.0)
-s == 2
-c2 == SVector{3,Float64}(0.5,1.5,0.5)
-h = 0.5
-
-function lastnonemptychild(tree,node)
-    @assert FMMTrees.PointerBasedTrees.getnode(tree,node).first_child >= 1
-    r = 0
-    for chd in children(tree, node)
-        if !(FMMTrees.PointerBasedTrees.getnode(tree,chd).first_child < 1)
-            r = chd
-        end
-    end
-    return r
-end
-
-
-function lastchild(tree,node)
-    @assert FMMTrees.PointerBasedTrees.getnode(tree,node).first_child >= 1
-    r = 0
-    for chd in children(tree, node)
-        r = chd
-    end
-    return r
-end
-
 struct Router{P,T}
     target_point::P
     smallest_box_size::T
 end
 
-function reached(tree, target, meta)
+function FMMTrees.PointerBasedTrees.reached(tree, target, meta)
     sector, center, size = meta
     return size <= target.smallest_box_size
 end
 
-function directions(tree, target, meta)
-    sector, center, size = meta
-    return sector_center_size(target.target_point, center, size)
+function FMMTrees.PointerBasedTrees.directions(tree, target, meta)
+    sector, center, size, sfc_state = meta
+    sector, center, size = sector_center_size(target.target_point, center, size)
+    sfc_pos = FMMTrees.Octrees.hilbert_positions[sfc_state][sector+1] + 1
+    sfc_state = FMMTrees.Octrees.hilbert_states[sfc_state][sector+1] + 1
+    return sector, center, size, sfc_state, sfc_pos
 end
 
-function isontherighttrack(tree, node, meta)
+function FMMTrees.PointerBasedTrees.isontherighttrack(tree, node, meta)
     sector, center, size = meta
     FMMTrees.data(tree, node).sector == sector
 end
 
-function newnode!(tree, node, prev, meta)
-    sector, center, size = meta
-    data = Data(sector)
-    bef = prev < 1 ? 0 : FMMTrees.PointerBasedTrees.getnode(tree, prev).next_sibling
-    FMMTrees.insert!(tree, data, parent=node, before=bef, prev=prev)
+function FMMTrees.PointerBasedTrees.reachedposamongsiblings(tree, child, par_meta)
+    _1, _2, _3, par_sfc_state = par_meta
+    child_sector = FMMTrees.data(tree, child).sector
+    child_pos = FMMTrees.Octrees.hilbert_positions[par_sfc_state][child_sector+1] + 1
+    target_pos = FMMTrees.Octrees.hilbert_positions[par_sfc_state][target_sector+1] + 1
+    return target_pos < child_pos
 end
 
-function FMMTrees.route!(tree::FMMTrees.PointerBasedTrees.PointerBasedTree, state, target)
-
-    (parent, prev_fat_par, meta) = state
-    @assert prev_fat_par < 1 || FMMTrees.haschildren(tree, prev_fat_par)
-    reached(tree, target, meta) && return state
-
-    meta = directions(tree, target, meta)
-    prev_fat_child = prev_fat_par < 1 ? 0 : lastnonemptychild(tree, prev_fat_par)
-    prev_child = prev_fat_par < 1 ? 0 : lastchild(tree, prev_fat_par)
-    for child in FMMTrees.children(tree, parent)
-        isontherighttrack(tree, child, meta) && return (child, prev_fat_child, meta)
-        FMMTrees.haschildren(tree, child) && (prev_fat_child = child)
-        prev_child = child
-    end
-
-    child = newnode!(tree, parent, prev_child, meta)
-    return child, prev_fat_child, meta
+function FMMTrees.PointerBasedTrees.newnode!(tree, node, prev, bef, meta)
+    sector, center, size, sfc_state = meta
+    data = Data(sector)
+    # bef = prev < 1 ? 0 : FMMTrees.PointerBasedTrees.getnode(tree, prev).next_sibling
+    @show node, bef, prev
+    FMMTrees.insert!(tree, data, parent=node, before=bef, prev=prev)
 end
 
 function updater!(tree, state, data)
     node_idx = state[1]
     push!(tree.nodes[node_idx].data.values, data)
 end
-
 
 const N = FMMTrees.PointerBasedTrees.Node{Data}
 tree = FMMTrees.PointerBasedTrees.PointerBasedTree(
@@ -104,16 +67,18 @@ tree = FMMTrees.PointerBasedTrees.PointerBasedTree(
 function FMMTrees.update!(f, tree::FMMTrees.PointerBasedTrees.PointerBasedTree, i, point, sms)
     router! = Router(point, sms)
     prev_fat_child = 0
-    root_sector, root_center, root_size = 0, SVector{3,Float64}(0,0,0), 1.0
+    root_sector, root_center, root_size = 0, SVector{3,Float64}(0.5,0.5,0.5), 0.5
+    root_sfc_state = 1
+    root_sfc_pos = 1
     root_meta = root_sector, root_center, root_size
-    root_state = (root(tree), prev_fat_child, root_meta)
+    root_state = (root(tree), prev_fat_child, root_sfc_state, root_meta)
     FMMTrees.update!(tree, root_state, i, router!, f)
 end
 
 using DelimitedFiles
 Q = readdlm("points.dlm", Float64)
 points = [SVector{3,Float64}(Q[i,:]) for i in axes(Q,1)]
-points = [ rand(SVector{3,Float64}) for i in 1:100 ]
+# points = [ rand(SVector{3,Float64}) for i in 1:10 ]
 num_points = length(points)
 
 smallest_box_size = 0.2
@@ -122,6 +87,8 @@ for i in 1:num_points
         push!(FMMTrees.data(tree, state[1]).values, data)
     end
 end
+
+error("stop")
 
 ns = sum(length(data(tree,nd).values) for nd in FMMTrees.DepthFirstIterator(tree, tree.root))
 @assert ns == num_points

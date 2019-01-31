@@ -44,21 +44,26 @@ function children end
 
 function haschildren end
 
-# import AbstractTrees: print_tree, children
-# export print_tree, children
-#
-# export insertchild, data
-#
-# function insertchild end
-# function data end
-#
-#
-# function depthfirst(f, t, level = 1)
-#     f(t, level)
-#     for c in children(t)
-#         depthfirst(f, c, level+1)
-#     end
-# end
+function lastnonemptychild(tree,node)
+    @assert FMMTrees.haschildren(tree,node)
+    r = 0
+    for chd in children(tree, node)
+        if FMMTrees.haschildren(tree,chd)
+            r = chd
+        end
+    end
+    return r
+end
+
+
+function lastchild(tree,node)
+    @assert FMMTrees.haschildren(tree,node)
+    r = 0
+    for chd in children(tree, node)
+        r = chd
+    end
+    return r
+end
 
 """
 Traverse the tree depth first, executing the function `f(tree, node, level)`

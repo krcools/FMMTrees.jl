@@ -84,4 +84,32 @@ function FMMTrees.insert!(tree::PointerBasedTree, data; parent, before, prev)
     return length(tree.nodes)
 end
 
+function reached end
+function directions end
+function reachedposamongsiblings end
+function isontherighttrack end
+function newnode! end
+
+function FMMTrees.route!(tree::FMMTrees.PointerBasedTrees.PointerBasedTree, state, target)
+
+    (parent, prev_fat_par, router_state, par_meta) = state
+    @assert prev_fat_par < 1 || FMMTrees.haschildren(tree, prev_fat_par)
+    reached(tree, target, par_meta) && return state
+
+    chd_meta = directions(tree, target, par_meta)
+    prev_fat_child = prev_fat_par < 1 ? 0 : FMMTrees.lastnonemptychild(tree, prev_fat_par)
+    prev_child = prev_fat_par < 1 ? 0 : FMMTrees.lastchild(tree, prev_fat_par)
+    next_child = 0
+    for child in FMMTrees.children(tree, parent)
+        next_child = child
+        reachedposamongsiblings(tree, child, par_meta) && break
+        isontherighttrack(tree, child, meta) && return (child, prev_fat_child, chd_meta)
+        FMMTrees.haschildren(tree, child) && (prev_fat_child = child)
+        prev_child = child
+    end
+
+    child = newnode!(tree, parent, prev_child, next_child, chd_meta)
+    return child, prev_fat_child, chd_meta
+end
+
 end

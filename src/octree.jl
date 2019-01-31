@@ -111,18 +111,11 @@ function updater!(tree, (node, center, size), data)
 end
 
 
-# function FMMTrees.update!(f, tree::Octree, data, point, sbs)
-#     root_state = ...
-#     router! = Router(sbs, point)
-#     updater!(tree, state, data) = setnode!(tree, state[1], data)
-#     FMMTrees.update!(tree, root_state, data, router!, updater!)
-# end
-
 function FMMTrees.insert!(tree::Octree, (parent, sfc_state), data)
 
     target_pos = hilbert_positions[sfc_state][data.sector+1] + 1
     prev = 0
-    # prev = last(children(tree, prev_par)) if prev_par >= 1
+    # prev = prev_par < 1 ? 0 : lastnonemptychild(tree, prev_par)
     found = false
     for child in children(tree, parent)
         child_sector = FMMTrees.data(tree, child).sector
