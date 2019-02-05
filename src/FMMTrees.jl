@@ -14,5 +14,6 @@ include("pointerbasedtrees.jl")
 #include("aca.jl")
 
 include("octree.jl")
+include("leveltree.jl")
 
 end # module
