@@ -45,7 +45,7 @@ Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
 
 FMMTrees.children(tree::APBTree, node=FMMTrees.root(tree)) = ChildView(tree, node)
 FMMTrees.haschildren(tree::APBTree, node) = (firstchild(tree,node) >= 1)
-FMMTrees.data(tree::APBTree, node=FMMTrees.root(tree)) = data(getnode(tree, node))
+FMMTrees.data(tree::PointerBasedTree, node=FMMTrees.root(tree)) = data(getnode(tree, node))
 
 """
     insert!(tree, parent, data)

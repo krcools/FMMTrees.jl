@@ -69,7 +69,7 @@ function newnode!(tree, node, prev, meta)
     sector, center, size = meta
     data = Data(sector)
     bef = prev < 1 ? 0 : FMMTrees.PointerBasedTrees.getnode(tree, prev).next_sibling
-    FMMTrees.insert!(tree, data, parent=node, before=bef, prev=prev)
+    FMMTrees.insert!(tree, data, parent=node, next=bef, prev=prev)
 end
 
 function FMMTrees.route!(tree::FMMTrees.PointerBasedTrees.PointerBasedTree, state, target)
