@@ -31,7 +31,7 @@ Base.length(itr::FMMTrees.DepthFirstIterator{T}) where {T<:Octree} = length(itr.
 # Tree API
 FMMTrees.data(tree::Octree, node) = data(tree.pbtree, node)
 FMMTrees.children(tree::Octree, node) = children(tree.pbtree, node)
-FMMTrees.insert!(tree::Octree, data; before, parent, prev) = FMMTrees.insert!(tree.pbtree, data, before=before, parent=parent, prev=prev)
+FMMTrees.insert!(tree::Octree, data; next, parent, prev) = FMMTrees.insert!(tree.pbtree, data, next=next, parent=parent, prev=prev)
 FMMTrees.root(tree::Octree) = root(tree.pbtree)
 
 # PointerBasedTrees API
@@ -95,17 +95,18 @@ function route!(tree::Octree, state, router)
     target_sector, target_center, target_size = sector_center_size(point, center, size)
     target_pos = hilbert_positions[sfc_state][target_sector+1] + 1
     target_sfc_state = hilbert_states[sfc_state][target_sector+1] + 1
+    prev_child, next_child = 0, 0
     for child in FMMTrees.children(tree, node_idx)
         child_sector = FMMTrees.data(tree,child).sector
         child_pos = hilbert_positions[sfc_state][child_sector+1]+1
-        target_pos < child_pos  && break
+        target_pos < child_pos  && (next_child = child; break)
         if child_sector == target_sector
             return (child, target_center, target_size, target_sfc_state)
         end
-
+        prev_child = child
     end
     data = Data(target_sector, Int[])
-    new_node_idx = FMMTrees.insert!(tree, (node_idx, sfc_state), data)
+    new_node_idx = FMMTrees.insert!(tree, data, next=next_child, prev=prev_child, parent=node_idx)
     return new_node_idx, target_center, target_size, target_sfc_state
 end
 
@@ -113,32 +114,5 @@ end
 function updater!(tree, (node, center, size), data)
     push!(FMMTrees.data(tree, node).values, data)
 end
-
-
-# function FMMTrees.update!(f, tree::Octree, data, point, sbs)
-#     root_state = ...
-#     router! = Router(sbs, point)
-#     updater!(tree, state, data) = setnode!(tree, state[1], data)
-#     FMMTrees.update!(tree, root_state, data, router!, updater!)
-# end
-
-function FMMTrees.insert!(tree::Octree, (parent, sfc_state), data)
-
-    target_pos = hilbert_positions[sfc_state][data.sector+1] + 1
-    prev = 0
-    # prev = last(children(tree, prev_par)) if prev_par >= 1
-    found = false
-    for child in children(tree, parent)
-        child_sector = FMMTrees.data(tree, child).sector
-        child_pos = hilbert_positions[sfc_state][child_sector+1] + 1
-        if child_pos > target_pos
-            return FMMTrees.insert!(tree, data, before=child, prev=prev, parent=parent)
-        end
-        prev = child
-    end
-
-    return FMMTrees.insert!(tree, data, before=0, prev=prev, parent=parent)
-end
-
 
 end # module
