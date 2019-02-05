@@ -25,12 +25,16 @@ FMMTrees.data(tree::LevelledTree, node=FMMTrees.root(tree)) = tree.nodes[node].n
 FMMTrees.PointerBasedTrees.nextsibling(tree::LevelledTree, node_idx) = tree.nodes[node_idx].node.next_sibling
 FMMTrees.PointerBasedTrees.parent(tree::LevelledTree, node_idx) = tree.nodes[node_idx].node.parent
 FMMTrees.PointerBasedTrees.firstchild(tree::LevelledTree, node_idx) = tree.nodes[node_idx].node.first_child
+height(tree::LevelledTree, node_idx) = tree.nodes[node_idx].height
 
 _setfirstchild!(node::HNode, child) = HNode(FMMTrees.PointerBasedTrees.Node(node.node.data, node.node.num_children, node.node.next_sibling, node.node.parent, child), node.height)
 FMMTrees.PointerBasedTrees.setfirstchild!(tree::LevelledTree, node, child) = tree.nodes[node] = _setfirstchild!(tree.nodes[node], child)
 
 _setnextsibling!(node::HNode, next) = HNode(FMMTrees.PointerBasedTrees.Node(node.node.data, node.node.num_children, next, node.node.parent, node.node.first_child), node.height)
 FMMTrees.PointerBasedTrees.setnextsibling!(tree::LevelledTree, node, next) = tree.nodes[node] = _setnextsibling!(tree.nodes[node], next)
+
+_setheight!(node::HNode, height) = HNode(node.node, height)
+setheight!(tree::LevelledTree, node, height) = tree.nodes[node] = _setheight!(tree.nodes[node], height)
 
 
 function FMMTrees.insert!(tree::LevelledTree, data; parent, next, prev)
@@ -41,6 +45,16 @@ function FMMTrees.insert!(tree::LevelledTree, data; parent, next, prev)
     end
     if !(prev < 1)
         FMMTrees.PointerBasedTrees.setnextsibling!(tree, prev, length(tree.nodes))
+    end
+
+    # Walk up the tree and add one to the height tracker along the path
+    id = length(tree.nodes)
+    h = 0
+    while true
+        setheight!(tree, id, max(height(tree,id),h))
+        id = FMMTrees.PointerBasedTrees.parent(tree, id)
+        id < 1 && break
+        h += 1
     end
     return length(tree.nodes)
 end
