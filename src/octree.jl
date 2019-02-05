@@ -93,9 +93,11 @@ function route!(tree::Octree, state, router)
     node_idx, center, size, sfc_state = state
     size <= smallest_box_size && return state
     child_sector, child_center, child_size = sector_center_size(point, center, size)
+    child_pos = hilbert_positions[sfc_state][child_sector+1] + 1
     child_sfc_state = hilbert_states[sfc_state][child_sector+1] + 1
     for child in FMMTrees.children(tree, node_idx)
         d = FMMTrees.data(tree,child)
+        child_pos < hilbert_positions[sfc_state][d.sector+1]+1 && break
         if d.sector == child_sector
             return (child, child_center, child_size, child_sfc_state)
         end
