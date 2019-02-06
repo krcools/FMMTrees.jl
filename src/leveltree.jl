@@ -72,7 +72,7 @@ end
 
 function center_size(sector, center, size)
     size = size/2
-    bl = [2^(i-1) & sector == 0 for i in eachindex(center)]
+    bl = [2^(i-1) & sector != 0 for i in eachindex(center)]
     center = ifelse.(bl, center.+size, center.-size)
     return center, size
 end
@@ -114,6 +114,11 @@ const hilbert_positions = [
     [4,5,7,6,3,2,0,1],
     [6,1,7,0,5,2,4,3]]
 
+
+function contains(pt, ct, hs)
+    maximum(abs.(pt - ct)) <= hs
+end
+
 function FMMTrees.route!(tree::LevelledTree, state, router)
 
     point = router.target_point
@@ -130,6 +135,7 @@ function FMMTrees.route!(tree::LevelledTree, state, router)
         child_pos = hilbert_positions[sfc_state][child_sector+1]+1
         target_pos < child_pos  && (next_child = child; break)
         if child_sector == target_sector
+            @assert contains(point, target_center, target_size)
             return (child, target_center, target_size, target_sfc_state, depth+1)
         end
         prev_child = child
@@ -156,8 +162,8 @@ end
 
 function findprevnode(tree::LevelledTree, target, new_node, new_node_depth)
     node = tree.root
-    tgt_center = tree.center
-    tgt_size = tree.halfsize
+    node_center = tree.center
+    node_size = tree.halfsize
 
     point = target.target_point
 
@@ -165,22 +171,27 @@ function findprevnode(tree::LevelledTree, target, new_node, new_node_depth)
     prev_node = 0
     level = 1
     while true
-        new_node == 8 && @show node
+        new_node == 9 && @show level, node, new_node_depth
         if level == new_node_depth
             prev_node = node
             break
         end
-        if !contains(point, tgt_center, tgt_size)
-            target_pos = typemax(Int)
+        new_node == 9 && @show contains(point, node_center, node_size)
+        if !contains(point, node_center, node_size)
+            tgt_pos = typemax(Int)
         else
-            tgt_sector, tgt_center, tgt_size = sector_center_size(point, tgt_center, tgt_size)
+            tgt_sector, _, _ = sector_center_size(point, node_center, node_size)
             tgt_pos = hilbert_positions[sfc_state][tgt_sector+1] + 1
         end
         found = false
+        chd_sector = -1
         for chd in FMMTrees.children(tree,node)
             chd_sector = FMMTrees.data(tree,chd).sector
             chd_pos = hilbert_positions[sfc_state][chd_sector+1]+1
-            if chd_pos >= tgt_pos
+            if chd_pos > tgt_pos
+                break
+            end
+            if chd == new_node
                 break
             end
             if height(tree,chd) >= new_node_depth - level
@@ -191,7 +202,8 @@ function findprevnode(tree::LevelledTree, target, new_node, new_node_depth)
         if !found
             break
         end
-        sfc_state = hilbert_states[sfc_state][tgt_sector+1] + 1
+        node_center, node_size = center_size(chd_sector, node_center, node_size)
+        sfc_state = hilbert_states[sfc_state][chd_sector+1] + 1
         level += 1
     end
 
@@ -203,9 +215,6 @@ function findnextnode(tree::LevelledTree, target, new_node, new_node_depth)
     node = tree.root
     node_center = tree.center
     node_size = tree.halfsize
-
-    tgt_center = tree.center
-    tgt_size = tree.halfsize
 
     point = target.target_point
 
