@@ -5,17 +5,17 @@ using CompScienceMeshes
 const P = SVector{3,Float64}
 
 
-root_center = P(0.5,0.5,0.5)
-root_size = 0.5
+root_center = P(0,0,0)
+root_size = 1.0
 root_node = FMMTrees.LevelledTrees.HNode(FMMTrees.PointerBasedTrees.Node(FMMTrees.LevelledTrees.Data(0,Int[]), 0, 0, 0, 0), 0)
 tree = FMMTrees.LevelledTrees.LevelledTree([root_node], 1, root_center, root_size, Int[1])
 mesh = meshsphere(1.0, 0.15)
 # points = [rand(P) for i in 1:800]
 points = vertices(mesh)
 
-using DelimitedFiles
-Q = readdlm("points.dlm", Float64)
-points = [SVector{3,Float64}(Q[i,:]) for i in axes(Q,1)]
+# using DelimitedFiles
+# Q = readdlm("points.dlm", Float64)
+# points = [SVector{3,Float64}(Q[i,:]) for i in axes(Q,1)]
 
 smallest_box_size = 0.1
 root_sector = 0
@@ -29,7 +29,7 @@ end
 
 FMMTrees.print_tree(tree)
 
-num_bins = 8
+num_bins = 3
 bins = [P[] for i in 1:num_bins]
 
 num_printed = 0
@@ -50,9 +50,9 @@ ordered_points = [p[i] for p in ordered_points, i = 1:3]
 @show length(points)
 @assert num_points == length(points)
 
-# using Plots
-# plot()
-# for i in 1:length(bins)
-#     scatter!(bins[i])
-# end
-# plot!(legend=false)
+using Plots
+plot()
+for i in 1:length(bins)
+    scatter!(bins[i])
+end
+plot!(legend=false)

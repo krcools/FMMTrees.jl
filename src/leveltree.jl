@@ -144,22 +144,17 @@ function FMMTrees.route!(tree::LevelledTree, state, router)
     data = Data(target_sector, Int[])
     new_node_idx = FMMTrees.insert!(tree, data, next=next_child, prev=prev_child, parent=node_idx)
 
-    @show new_node_idx, prev_child, next_child
     if prev_child < 1
         prev_node_idx = findprevnode(tree, router, new_node_idx)
-        @show prev_node_idx
         prev_node_idx < 1 || FMMTrees.PointerBasedTrees.setnextsibling!(tree, prev_node_idx, new_node_idx)
         if prev_node_idx < 1
-            @show prev_node_idx
             resize!(tree.levels,depth+1)
-            tree.levels[depth+1] = prev_node_idx
+            tree.levels[depth+1] = new_node_idx
         end
     end
 
-
     if next_child < 1
         next_node_idx = findnextnode(tree, router, new_node_idx)
-        @show next_node_idx
         FMMTrees.PointerBasedTrees.setnextsibling!(tree, new_node_idx, next_node_idx)
     end
 
@@ -197,7 +192,6 @@ function findprevnode(tree::LevelledTree, target, new_node)
     parent < 1 && return prev_node
 
     while height > 1
-        @show prev_branch height
         for chd in FMMTrees.children(tree, prev_branch)
             if LevelledTrees.height(tree,chd) >= height-1
                 prev_node = chd
@@ -245,7 +239,6 @@ function findnextnode(tree::LevelledTree, target, new_node)
     parent < 1 && return prev_node
 
     while height > 1
-        @show prev_branch height
         for chd in FMMTrees.children(tree, prev_branch)
             if LevelledTrees.height(tree,chd) >= height-1
                 prev_node = chd
