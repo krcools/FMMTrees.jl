@@ -252,104 +252,14 @@ function findnextnode(tree::LevelledTree, target, new_node)
     return prev_node
 end
 
-# function findprevnode(tree::LevelledTree, target, new_node, new_node_depth)
-#     node = tree.root
-#     node_center = tree.center
-#     node_size = tree.halfsize
-#
-#     point = target.target_point
-#
-#     sfc_state = 1
-#     prev_node = 0
-#     level = 1
-#     while true
-#         new_node == 9 && @show level, node, new_node_depth
-#         if level == new_node_depth
-#             prev_node = node
-#             break
-#         end
-#         new_node == 9 && @show contains(point, node_center, node_size)
-#         if !contains(point, node_center, node_size)
-#             tgt_pos = typemax(Int)
-#         else
-#             tgt_sector, _, _ = sector_center_size(point, node_center, node_size)
-#             tgt_pos = hilbert_positions[sfc_state][tgt_sector+1] + 1
-#         end
-#         found = false
-#         chd_sector = -1
-#         for chd in FMMTrees.children(tree,node)
-#             chd_sector = FMMTrees.data(tree,chd).sector
-#             chd_pos = hilbert_positions[sfc_state][chd_sector+1]+1
-#             if chd_pos > tgt_pos
-#                 break
-#             end
-#             if chd == new_node
-#                 break
-#             end
-#             if height(tree,chd) >= new_node_depth - level
-#                 node = chd
-#                 found = true
-#             end
-#         end
-#         if !found
-#             break
-#         end
-#         node_center, node_size = center_size(chd_sector, node_center, node_size)
-#         sfc_state = hilbert_states[sfc_state][chd_sector+1] + 1
-#         level += 1
-#     end
-#
-#     return prev_node
-# end
-#
-#
-# function findnextnode(tree::LevelledTree, target, new_node, new_node_depth)
-#     node = tree.root
-#     node_center = tree.center
-#     node_size = tree.halfsize
-#
-#     point = target.target_point
-#
-#     sfc_state = 1
-#     next_node = 0
-#     level = 1
-#     while true
-#         new_node == 8 && @show node
-#         if level == new_node_depth
-#             new_node == 8 && @show level
-#             next_node = node
-#             break
-#         end
-#         @show contains(point, node_center, node_size)
-#         if !contains(point, node_center, node_size)
-#             tgt_pos = typemin(Int)
-#         else
-#             tgt_sector, _, _ = sector_center_size(point, node_center, node_size)
-#             tgt_pos = hilbert_positions[sfc_state][tgt_sector+1] + 1
-#         end
-#         found = false
-#         for chd in FMMTrees.children(tree,node)
-#             chd_sector = FMMTrees.data(tree,chd).sector
-#             chd_pos = hilbert_positions[sfc_state][chd_sector+1]+1
-#             if chd_pos <= tgt_pos
-#                 continue
-#             end
-#             if height(tree,chd) >= new_node_depth - level
-#                 node = chd
-#                 node_center, node_size = center_size(chd_sector, node_center, node_size)
-#                 sfc_state = hilbert_states[sfc_state][chd_sector+1] + 1
-#                 found = true
-#                 break
-#             end
-#         end
-#         if !found
-#             break
-#         end
-#         level += 1
-#     end
-#
-#     return next_node
-# end
+struct LevelIterator
+    tree
+    level::Int
+end
 
+function Base.iterate(itr::LevelIterator, node=itr.tree.levels[itr.level])
+    node < 1 && return nothing
+    return node, FMMTrees.PointerBasedTrees.nextsibling(itr.tree,node)
+end
 
 end # module LevelledTrees

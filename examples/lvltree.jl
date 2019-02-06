@@ -50,9 +50,15 @@ ordered_points = [p[i] for p in ordered_points, i = 1:3]
 @show length(points)
 @assert num_points == length(points)
 
-using Plots
-plot()
-for i in 1:length(bins)
-    scatter!(bins[i])
+num_points = 0
+for b in FMMTrees.LevelledTrees.LevelIterator(tree, length(tree.levels))
+    global num_points += length(FMMTrees.data(tree,b).values)
 end
-plot!(legend=false)
+@assert num_points == length(points)
+
+# using Plots
+# plot()
+# for i in 1:length(bins)
+#     scatter!(bins[i])
+# end
+# plot!(legend=false)
