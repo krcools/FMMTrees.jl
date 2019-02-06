@@ -4,11 +4,18 @@ using CompScienceMeshes
 
 const P = SVector{3,Float64}
 
-rootnode = FMMTrees.LevelledTrees.HNode(FMMTrees.PointerBasedTrees.Node(FMMTrees.LevelledTrees.Data(0,Int[]), 0, 0, 0, 0), 0)
-tree = FMMTrees.LevelledTrees.LevelledTree([rootnode], 1)
+
+root_center = P(0.5,0.5,0.5)
+root_size = 0.5
+root_node = FMMTrees.LevelledTrees.HNode(FMMTrees.PointerBasedTrees.Node(FMMTrees.LevelledTrees.Data(0,Int[]), 0, 0, 0, 0), 0)
+tree = FMMTrees.LevelledTrees.LevelledTree([root_node], 1, root_center, root_size)
 mesh = meshsphere(1.0, 0.15)
 # points = [rand(P) for i in 1:800]
 points = vertices(mesh)
+
+using DelimitedFiles
+Q = readdlm("points.dlm", Float64)
+points = [SVector{3,Float64}(Q[i,:]) for i in axes(Q,1)]
 
 # struct OTRouter
 #     smallest_box_size::Float64
@@ -19,11 +26,11 @@ points = vertices(mesh)
 
 smallest_box_size = 0.1
 root_sector = 0
-root_center = P(0,0,0)
-root_size = 1.0
+root_sfc_state = 1
+root_depth = 1
 for i in 1:length(points)
     router = FMMTrees.LevelledTrees.Router(smallest_box_size, points[i])
-    root_state = root(tree), root_center, root_size, 1
+    root_state = root(tree), root_center, root_size, root_sfc_state, root_depth
     update!(tree, root_state, i, router, FMMTrees.Octrees.updater!)
 end
 
