@@ -19,6 +19,7 @@ struct LevelledTree{D,P,T} <: FMMTrees.PointerBasedTrees.APBTree
     root::Int
     center::P
     halfsize::T
+    levels::Vector{Int}
 end
 
 FMMTrees.root(tree::LevelledTree) = tree.root
@@ -144,12 +145,17 @@ function FMMTrees.route!(tree::LevelledTree, state, router)
     new_node_idx = FMMTrees.insert!(tree, data, next=next_child, prev=prev_child, parent=node_idx)
 
     @show new_node_idx, prev_child, next_child
-    # Start from the root and find the previous node on the insertion level
     if prev_child < 1
         prev_node_idx = findprevnode(tree, router, new_node_idx)
         @show prev_node_idx
         prev_node_idx < 1 || FMMTrees.PointerBasedTrees.setnextsibling!(tree, prev_node_idx, new_node_idx)
+        if prev_node_idx < 1
+            @show prev_node_idx
+            resize!(tree.levels,depth+1)
+            tree.levels[depth+1] = prev_node_idx
+        end
     end
+
 
     if next_child < 1
         next_node_idx = findnextnode(tree, router, new_node_idx)
