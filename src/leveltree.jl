@@ -70,6 +70,13 @@ function sector_center_size(pt, ct, hs)
     return sc, ct, hs
 end
 
+function center_size(sector, center, size)
+    size = size/2
+    bl = [2^(i-1) & sector == 0 for i in eachindex(center)]
+    center = ifelse.(bl, center.+size, center.-size)
+    return center, size
+end
+
 function contains(pt, ct, hs)
     maximum(abs.(pt - ct)) <= hs
 end
@@ -130,14 +137,17 @@ function FMMTrees.route!(tree::LevelledTree, state, router)
     data = Data(target_sector, Int[])
     new_node_idx = FMMTrees.insert!(tree, data, next=next_child, prev=prev_child, parent=node_idx)
 
+    @show new_node_idx, prev_child, next_child
     # Start from the root and find the previous node on the insertion level
     if prev_child < 1
         prev_node_idx = findprevnode(tree, router, new_node_idx, depth+1)
+        @show prev_node_idx
         prev_node_idx < 1 || FMMTrees.PointerBasedTrees.setnextsibling!(tree, prev_node_idx, new_node_idx)
     end
 
     if next_child < 1
         next_node_idx = findnextnode(tree, router, new_node_idx, depth+1)
+        @show next_node_idx
         FMMTrees.PointerBasedTrees.setnextsibling!(tree, new_node_idx, next_node_idx)
     end
 
@@ -155,6 +165,7 @@ function findprevnode(tree::LevelledTree, target, new_node, new_node_depth)
     prev_node = 0
     level = 1
     while true
+        new_node == 8 && @show node
         if level == new_node_depth
             prev_node = node
             break
@@ -190,6 +201,9 @@ end
 
 function findnextnode(tree::LevelledTree, target, new_node, new_node_depth)
     node = tree.root
+    node_center = tree.center
+    node_size = tree.halfsize
+
     tgt_center = tree.center
     tgt_size = tree.halfsize
 
@@ -199,14 +213,17 @@ function findnextnode(tree::LevelledTree, target, new_node, new_node_depth)
     next_node = 0
     level = 1
     while true
+        new_node == 8 && @show node
         if level == new_node_depth
+            new_node == 8 && @show level
             next_node = node
             break
         end
-        if !contains(point, tgt_center, tgt_size)
-            target_pos = typemin(Int)
+        @show contains(point, node_center, node_size)
+        if !contains(point, node_center, node_size)
+            tgt_pos = typemin(Int)
         else
-            tgt_sector, tgt_center, tgt_size = sector_center_size(point, tgt_center, tgt_size)
+            tgt_sector, _, _ = sector_center_size(point, node_center, node_size)
             tgt_pos = hilbert_positions[sfc_state][tgt_sector+1] + 1
         end
         found = false
@@ -218,6 +235,8 @@ function findnextnode(tree::LevelledTree, target, new_node, new_node_depth)
             end
             if height(tree,chd) >= new_node_depth - level
                 node = chd
+                node_center, node_size = center_size(chd_sector, node_center, node_size)
+                sfc_state = hilbert_states[sfc_state][chd_sector+1] + 1
                 found = true
                 break
             end
@@ -225,7 +244,6 @@ function findnextnode(tree::LevelledTree, target, new_node, new_node_depth)
         if !found
             break
         end
-        sfc_state = hilbert_states[sfc_state][tgt_sector+1] + 1
         level += 1
     end
 
