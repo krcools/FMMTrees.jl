@@ -151,11 +151,11 @@ function FMMTrees.route!(tree::LevelledTree, state, router)
         prev_node_idx < 1 || FMMTrees.PointerBasedTrees.setnextsibling!(tree, prev_node_idx, new_node_idx)
     end
 
-    # if next_child < 1
-    #     next_node_idx = findnextnode(tree, router, new_node_idx, depth+1)
-    #     @show next_node_idx
-    #     FMMTrees.PointerBasedTrees.setnextsibling!(tree, new_node_idx, next_node_idx)
-    # end
+    if next_child < 1
+        next_node_idx = findnextnode(tree, router, new_node_idx)
+        @show next_node_idx
+        FMMTrees.PointerBasedTrees.setnextsibling!(tree, new_node_idx, next_node_idx)
+    end
 
     return new_node_idx, target_center, target_size, target_sfc_state, depth+1
 end
@@ -216,12 +216,16 @@ function findnextnode(tree::LevelledTree, target, new_node)
         if parent < 1
             break
         end
+        pay_attention = false
         for chd in FMMTrees.children(tree, parent)
             if chd == node
-                break
+                pay_attention = true
+                continue
             end
+            pay_attention || continue
             if LevelledTrees.height(tree,chd) >= height
                 prev_branch = chd
+                break
             end
         end
         if !(prev_branch < 1)
@@ -239,6 +243,7 @@ function findnextnode(tree::LevelledTree, target, new_node)
         for chd in FMMTrees.children(tree, prev_branch)
             if LevelledTrees.height(tree,chd) >= height-1
                 prev_node = chd
+                break
             end
         end
         prev_branch = prev_node
