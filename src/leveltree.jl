@@ -148,7 +148,7 @@ function FMMTrees.route!(tree::LevelledTree, state, router)
         prev_node_idx = findprevnode(tree, router, new_node_idx)
         prev_node_idx < 1 || FMMTrees.PointerBasedTrees.setnextsibling!(tree, prev_node_idx, new_node_idx)
         if prev_node_idx < 1
-            resize!(tree.levels,depth+1)
+            depth+1 > length(tree.levels) && resize!(tree.levels,depth+1)
             tree.levels[depth+1] = new_node_idx
         end
     end

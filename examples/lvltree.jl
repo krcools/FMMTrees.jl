@@ -51,8 +51,10 @@ ordered_points = [p[i] for p in ordered_points, i = 1:3]
 @assert num_points == length(points)
 
 num_points = 0
+ordered_points = P[]
 for b in FMMTrees.LevelledTrees.LevelIterator(tree, length(tree.levels))
     global num_points += length(FMMTrees.data(tree,b).values)
+    append!(ordered_points, points[FMMTrees.data(tree,b).values])
 end
 @assert num_points == length(points)
 
