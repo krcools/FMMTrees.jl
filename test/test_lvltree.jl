@@ -55,6 +55,7 @@ end
 @test num_points == length(points)
 
 @test length(tree.levels) == 4
+@test FMMTrees.LevelledTrees.numlevels(tree) == 4
 lvl1 = collect(FMMTrees.LevelledTrees.LevelIterator(tree,1))
 @test lvl1 == [1]
 lvl2 = collect(FMMTrees.LevelledTrees.LevelIterator(tree,2))

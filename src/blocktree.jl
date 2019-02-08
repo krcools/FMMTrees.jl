@@ -29,4 +29,11 @@ function FMMTrees.haschildren(b::BlockTree, node)
     return true
 end
 
+function FMMTrees.LevelledTrees.numlevels(bt)
+    num_test_levels = testcluster(bt)
+    num_trial_levels = trialcluster(bt)
+    @assert num_test_levels == num_trial_levels
+    return num_test_levels
+end
+
 end # module BlockTrees

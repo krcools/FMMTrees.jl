@@ -25,6 +25,7 @@ for i in 1:length(points)
 end
 
 bt = FMMTrees.BlockTrees.BlockTree(tree,tree)
+@test FMMTrees.LevelledTrees.numlevels(tree) == 4
 # FMMTrees.print_tree(bt)
 
 num_levels = length(tree.levels)

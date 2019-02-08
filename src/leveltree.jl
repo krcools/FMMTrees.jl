@@ -260,4 +260,6 @@ end
 
 Base.IteratorSize(::LevelIterator) = Base.SizeUnknown()
 
+numlevels(t::LevelledTree) = length(t.levels)
+
 end # module LevelledTrees
