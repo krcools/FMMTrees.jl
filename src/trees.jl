@@ -1,7 +1,7 @@
 export data
 export children
 export update!
-export insert!
+# export insert!
 export root
 
 """
@@ -68,7 +68,7 @@ end
 function route! end
 
 """
-    update!(tree, node, data, router!, updater!)
+    update!(f, tree, node, data, router!)
 
 Algorithm to update or add nodes of the tree. `router!` and `updater!` are
 user supplied functions:
@@ -79,18 +79,19 @@ Returns the next candidate `node` until the node for insertion is reaches. Note
 that this function potentially created new nodes. Arrival at the destination is
 indicated by returning the same node that was passed as the second argument.
 
-    updater!(tree, node, data)
+    f(tree, node, data)
 
 Update the destination node `node`. Typically, `data` is added in some sense
 to the data residing at the desitination node.
 """
-function update!(tree, node, data, router, updater!)
+function update!(f, tree, state, data, target)
     while true
-        dest_node = route!(tree, node, router)
-        dest_node == node && break
-        node = dest_node
+        next_state = route!(tree, state, target)
+        next_state == state && break
+        state = next_state
     end
-    updater!(tree, node, data)
+    node = state[1]
+    f(tree, node, data)
     return node
 end
 

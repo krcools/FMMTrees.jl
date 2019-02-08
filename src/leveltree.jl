@@ -116,10 +116,6 @@ const hilbert_positions = [
     [6,1,7,0,5,2,4,3]]
 
 
-function contains(pt, ct, hs)
-    maximum(abs.(pt - ct)) <= hs
-end
-
 function FMMTrees.route!(tree::LevelledTree, state, router)
 
     point = router.target_point

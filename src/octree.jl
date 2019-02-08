@@ -111,8 +111,8 @@ function route!(tree::Octree, state, router)
 end
 
 
-function updater!(tree, (node, center, size), data)
-    push!(FMMTrees.data(tree, node).values, data)
-end
+# function updater!(tree, (node, center, size), data)
+#     push!(FMMTrees.data(tree, node).values, data)
+# end
 
 end # module

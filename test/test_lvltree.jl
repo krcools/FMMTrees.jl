@@ -5,7 +5,7 @@ using Test
 const P = SVector{3,Float64}
 
 using DelimitedFiles
-Q = readdlm("points.dlm", Float64)
+Q = readdlm(joinpath(@__DIR__,"points.dlm"), Float64)
 points = [SVector{3,Float64}(Q[i,:]) for i in axes(Q,1)]
 
 root_center = P(0.5,0.5,0.5)
@@ -20,7 +20,9 @@ root_depth = 1
 for i in 1:length(points)
     router = FMMTrees.LevelledTrees.Router(smallest_box_size, points[i])
     root_state = root(tree), root_center, root_size, root_sfc_state, root_depth
-    update!(tree, root_state, i, router, FMMTrees.Octrees.updater!)
+    FMMTrees.update!(tree, root_state, i, router)  do tree, node, data
+        push!(FMMTrees.data(tree,node).values, data)
+    end
 end
 
 # FMMTrees.print_tree(tree)
