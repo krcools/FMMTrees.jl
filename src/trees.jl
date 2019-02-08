@@ -44,22 +44,6 @@ function children end
 
 function haschildren end
 
-# import AbstractTrees: print_tree, children
-# export print_tree, children
-#
-# export insertchild, data
-#
-# function insertchild end
-# function data end
-#
-#
-# function depthfirst(f, t, level = 1)
-#     f(t, level)
-#     for c in children(t)
-#         depthfirst(f, c, level+1)
-#     end
-# end
-
 """
 Traverse the tree depth first, executing the function `f(tree, node, level)`
 at every node. If `f` returns `false`, recursion is halted and the next node
@@ -75,7 +59,6 @@ end
 function print_tree(tree, node=root(tree); maxdepth=0)
     depthfirst(tree) do tree, node, level
         print("-"^(level-1))
-        # print(FMMTrees.PointerBasedTrees.getnode(tree, node))
         println(FMMTrees.data(tree, node))
         return level == maxdepth ? false : true
     end
@@ -116,6 +99,8 @@ struct DepthFirstIterator{T,N}
     node::N
 end
 
+Base.IteratorSize(::DepthFirstIterator) = Base.SizeUnknown()
+
 function Base.iterate(itr::DepthFirstIterator)
     chitr = children(itr.tree,itr.node)
     stack = Any[(chitr, iterate(chitr))]
@@ -140,7 +125,6 @@ function Base.iterate(itr::DepthFirstIterator, stack)
     end
 end
 
-"""
-Return a depth first iterator for tree.
-"""
-DepthFirstIterator(tree,node)
+function leaves(tree, node=root(tree))
+    Iterators.filter(n->!haschildren(tree,n), DepthFirstIterator(tree,node))
+end

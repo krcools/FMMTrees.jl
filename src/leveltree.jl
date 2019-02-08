@@ -262,4 +262,6 @@ function Base.iterate(itr::LevelIterator, node=itr.tree.levels[itr.level])
     return node, FMMTrees.PointerBasedTrees.nextsibling(itr.tree,node)
 end
 
+Base.IteratorSize(::LevelIterator) = Base.SizeUnknown()
+
 end # module LevelledTrees

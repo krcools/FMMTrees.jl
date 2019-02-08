@@ -1,9 +1,5 @@
 using FMMTrees
-using AbstractTrees
 using Test
-
-# p = rand(20)
-# q, b = FMMTrees.clustertree(p)
 
 N = FMMTrees.SimpleTrees.TreeNode
 nodes = N[
@@ -18,15 +14,13 @@ nodes = N[
                 N(0,"i")]
 
 tree = FMMTrees.SimpleTrees.SimpleTree(nodes)
-print_tree(tree)
-#children = FMMTrees.children
+FMMTrees.print_tree(tree)
 
-chdit = children(tree)
-#state = start(chdit)
+chdit = FMMTrees.children(tree)
 
 @test data(tree) == "a"
-@test collect(data(ch) for ch in children(tree)) == ["b","e"]
-collect(data(lv) for lv in Leaves(tree)) == ["c","d","f","h","i"]
+@test collect(data(ch) for ch in FMMTrees.children(tree)) == ["b","e"]
+@test collect(data(lv) for lv in FMMTrees.leaves(tree)) == ["c","d","f","h","i"]
 
 
 const N2 = FMMTrees.PointerBasedTrees.Node
@@ -43,20 +37,7 @@ nodes2 = N2[
 tree2 = FMMTrees.PointerBasedTrees.PointerBasedTree(nodes2,1)
 
 @test data(tree2) == "a"
-@test collect(data(ch) for ch in children(tree2)) == ["b","e"]
-collect(data(lv) for lv in Leaves(tree2)) == ["c","d","f","h","i"]
+@test collect(data(tree2,ch) for ch in FMMTrees.children(tree2)) == ["b","e"]
+@test collect(data(tree2,lv) for lv in FMMTrees.leaves(tree2)) == ["c","d","f","h","i"]
 
-print_tree(tree2)
-
-
-# ti = Leaves(tree2)
-# state = AT.firststate(PreOrderDFS(ti.tree))
-# css = AT.childstates(ti.tree, state)
-# isempty(css)
-# state = first(css)
-# css = AT.childstates(ti.tree, state)
-# AT.childstates(css)
-
-#isempty(css)
-#AT.firststate(ti)
-#s1 = start(ti)
+FMMTrees.print_tree(tree2)

@@ -15,5 +15,6 @@ include("pointerbasedtrees.jl")
 
 include("octree.jl")
 include("leveltree.jl")
+include("blocktree.jl")
 
 end # module

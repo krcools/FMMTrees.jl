@@ -1,6 +1,6 @@
 module SimpleTrees
 
-using AbstractTrees
+# using AbstractTrees
 using FMMTrees
 
 struct TreeNode{T}
@@ -14,7 +14,10 @@ end
 
 
 struct ChildView{T} tree::T end
-AbstractTrees.children(tree::SimpleTree) = collect(ChildView(tree))
+FMMTrees.children(tree::SimpleTree, node=root(tree)) = collect(ChildView(node))
+FMMTrees.root(tree::SimpleTree) = tree
+FMMTrees.data(tree::SimpleTree, node=root(tree)) = first(node.nodes).data
+FMMTrees.haschildren(tree::SimpleTree, node=root(tree)) = (first(node.nodes).num_children > 0)
 
 Base.IteratorSize(cv::ChildView) = Base.SizeUnknown()
 
@@ -28,7 +31,7 @@ end
 
 Base.getindex(tree::SimpleTree, i::Int) = tree.nodes[i]
 
-FMMTrees.data(tree::SimpleTree) = first(tree.nodes).data
-AbstractTrees.printnode(io::IO, tree::SimpleTree) = show(io, data(tree))
+
+# AbstractTrees.printnode(io::IO, tree::SimpleTree) = show(io, data(tree))
 
 end # module SimpleTrees

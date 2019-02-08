@@ -1,20 +1,15 @@
 using FMMTrees
 using StaticArrays
-using CompScienceMeshes
+using Test
 
 const P = SVector{3,Float64}
 
+using DelimitedFiles
+Q = readdlm("points.dlm", Float64)
+points = [SVector{3,Float64}(Q[i,:]) for i in axes(Q,1)]
 
-mesh = meshsphere(1.0, 0.15)
-# points = [rand(P) for i in 1:800]
-points = vertices(mesh)
-
-# using DelimitedFiles
-# Q = readdlm("points.dlm", Float64)
-# points = [SVector{3,Float64}(Q[i,:]) for i in axes(Q,1)]
-
-root_center = P(0,0,0)
-root_size = 1.0
+root_center = P(0.5,0.5,0.5)
+root_size = 0.5
 root_node = FMMTrees.LevelledTrees.HNode(FMMTrees.PointerBasedTrees.Node(FMMTrees.LevelledTrees.Data(0,Int[]), 0, 0, 0, 0), 0)
 tree = FMMTrees.LevelledTrees.LevelledTree([root_node], 1, root_center, root_size, Int[1])
 
@@ -28,7 +23,7 @@ for i in 1:length(points)
     update!(tree, root_state, i, router, FMMTrees.Octrees.updater!)
 end
 
-FMMTrees.print_tree(tree)
+# FMMTrees.print_tree(tree)
 
 num_bins = 3
 bins = [P[] for i in 1:num_bins]
@@ -37,6 +32,7 @@ num_printed = 0
 num_points = 0
 num_nodes = length(tree.nodes)
 for (i,node) in enumerate(FMMTrees.DepthFirstIterator(tree, root(tree)))
+    # println(node, ": ", tree.nodes[node])
     b = div((i-1)*num_bins, num_nodes) + 1
     append!(bins[b], points[FMMTrees.data(tree,node).values])
     global num_printed += 1
@@ -45,10 +41,8 @@ end
 
 ordered_points = reduce(append!, bins)
 ordered_points = [p[i] for p in ordered_points, i = 1:3]
-@assert num_printed == length(tree.nodes)
-@show num_points
-@show length(points)
-@assert num_points == length(points)
+@test num_printed == length(tree.nodes)
+@test num_points == length(points)
 
 num_points = 0
 ordered_points = P[]
@@ -56,11 +50,14 @@ for b in FMMTrees.LevelledTrees.LevelIterator(tree, length(tree.levels))
     global num_points += length(FMMTrees.data(tree,b).values)
     append!(ordered_points, points[FMMTrees.data(tree,b).values])
 end
-@assert num_points == length(points)
+@test num_points == length(points)
 
-# using Plots
-# plot()
-# for i in 1:length(bins)
-#     scatter!(bins[i])
-# end
-# plot!(legend=false)
+@test length(tree.levels) == 4
+lvl1 = collect(FMMTrees.LevelledTrees.LevelIterator(tree,1))
+@test lvl1 == [1]
+lvl2 = collect(FMMTrees.LevelledTrees.LevelIterator(tree,2))
+@test lvl2 == [10,13,2,5,23]
+lvl3 = collect(FMMTrees.LevelledTrees.LevelIterator(tree,3))
+@test lvl3 == [19,11,21,16,14,3,8,6,24]
+lvl4 = collect(FMMTrees.LevelledTrees.LevelIterator(tree,4))
+@test lvl4 == [20,18,12,22,17,15,4,9,7,25]
